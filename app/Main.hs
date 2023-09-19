@@ -14,23 +14,32 @@ import InputOutput.MapInput (stringToPredicate)
 main :: IO ()
 main = do
     putStrLn "Please enter the predicate you want to transform:"
-    putStrLn "(The predicate must be in disjunctive normal form using the following format:"
-    putStrLn "    - Modulo predicates: [a1 .. as] m c"
-    putStrLn "    - Threshold predicates: [a1 .. as] c"
-    putStrLn "    - Operator AND: &&"
-    putStrLn "    - Operator OR: ||"
-    putStrLn "    - Operator NOT: !"
-    putStrLn "  e. g. `[8, 5, 1] 7 2 && [-2, 1] 5 || [9, 4, 3] 2 1`"
+    putStrLn "(The predicate must be in the following format:"
+    putStrLn "    - Modulo predicates: [a1,..,as];m;c"
+    putStrLn "    - Threshold predicates: [a1,..,as];c"
+    putStrLn "    - Operator AND: AND"
+    putStrLn "    - Operator OR: OR"
+    putStrLn "    - Operator NOT: NOT"
+    putStrLn "    - Parenthesis: (...)"
+    putStrLn "    - coefficents must be seperated by a single `,` (no additional spaces)"
+    putStrLn "      the coefficients and each constant must be seperated by a single `;` (no additional spaces either)"
+    putStrLn "      predicates and Operators must be separated by at least one space"
+    putStrLn "    - there may be no spaces within a predicate;"
+    putStrLn "      more than one spaces between a predicate and an operator are accepted;"
+    putStrLn "      multiple spaces around parenthesis are accepted (not around brackets)"
+    putStrLn "  e. g. `([8,5,1];7;2 AND [-2,1];5) OR [9,4,3];2;1`"
+    putStrLn "  Note:"
+    putStrLn "    - AND has a higher precedence than OR"
+    putStrLn "    - NOT refers to the following single predicate or parenthesis"
     putStrLn ")"
+    putStrLn "Input: "
 
     predicateString <- getLine
-    let conjunctions = splitOn "||" predicateString
-    let splittetPredicate = map (splitOn "&&") conjunctions
 
     putStrLn ""
     putStrLn "Output: "
 
-    print $ constructPC $ stringToPredicate splittetPredicate
+    print $ constructPC $ stringToPredicate predicateString
 
     -- putStrLn ""
     -- putStrLn "--------------------------------------"

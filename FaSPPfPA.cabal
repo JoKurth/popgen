@@ -36,6 +36,7 @@ executable Code
     other-modules:    PresburgerMapper.Remainder
     other-modules:    PresburgerMapper.Threshold
     other-modules:    PresburgerMapper.Union
+    other-modules:    PresburgerMapper.DoublePhi
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:

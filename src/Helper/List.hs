@@ -23,3 +23,19 @@ maxFromList [x] = x
 maxFromList (x:xs)
     | maximum xs > x = maximum xs
     | otherwise = x
+
+
+combine :: [Int] -> [Int] -> [Int]
+combine [] [] = []
+combine [] (y:ys) = y : combine [] ys
+combine (x:xs) [] = x : combine xs []
+combine (x:xs) (y:ys) = x+y : combine xs ys
+
+combineLists :: [[Int]] -> [Int]
+combineLists [] = []
+combineLists [x] = x
+combineLists [x, y] = combine x y
+combineLists (x:y:xs) = combine (combine x y) $ combineLists xs
+
+extractIndexFromAllLists :: Int -> [[a]] -> [a]
+extractIndexFromAllLists index lists = map (!! index) $ filter (\list -> length list > index) lists

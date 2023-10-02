@@ -72,20 +72,6 @@ extractCoefficientsFromPredicates :: Predicates.BasePredicate -> [[Int]]
 extractCoefficientsFromPredicates (Left (Predicates.RP coefficients _ _)) = coefficients
 extractCoefficientsFromPredicates (Right (Predicates.TP coefficients _)) = coefficients
 
-combine :: [Int] -> [Int] -> [Int]
-combine [] [] = []
-combine [] (y:ys) = y : combine [] ys
-combine (x:xs) [] = x : combine xs []
-combine (x:xs) (y:ys) = x+y : combine xs ys
-
-combineLists :: [[Int]] -> [Int]
-combineLists [] = []
-combineLists [x] = x
-combineLists [x, y] = combine x y
-combineLists (x:y:xs) = combine (combine x y) $ combineLists xs
-
-extractIndexFromAllLists :: Int -> [[a]] -> [a]
-extractIndexFromAllLists index lists = map (!! index) $ filter (\list -> length list > index) lists
 
 constructDistributionTransition :: Int -> String -> Int -> [[[Int]]] -> (MultiSet.MultiSet String, MultiSet.MultiSet String)
 constructDistributionTransition variableNumber inputVar numberOfCoefficients coefficients = (inputTransition, outputTransition)

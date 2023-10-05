@@ -2,9 +2,11 @@ module Main where
 
 import qualified Types.PopulationComputer as PC (OutputValues(..), PopulationComputer, PopulationProtocol)
 import Types.Predicates
+import PresburgerMapper.DoublePhi
 import PresburgerMapper.Remainder
 import PresburgerMapper.Threshold
 import PresburgerMapper.Union
+import Transformer.Preprocess
 
 import Data.List.Split (splitOn)
 import qualified Data.Set as Set
@@ -24,8 +26,8 @@ main = do
     putStrLn "    - coefficents must be seperated by a single `,` (no additional spaces)"
     putStrLn "      the coefficients and each constant must be seperated by a single `;` (no additional spaces either)"
     putStrLn "      predicates and Operators must be separated by at least one space"
-    putStrLn "    - there may be no spaces within a predicate;"
-    putStrLn "      more than one spaces between a predicate and an operator are accepted;"
+    putStrLn "    - there may be no spaces within a predicate"
+    putStrLn "      more than one spaces between a predicate and an operator are accepted"
     putStrLn "      multiple spaces around parenthesis are accepted (not around brackets)"
     putStrLn "  e. g. `([8,5,1];7;2 AND [-2,1];5) OR [9,4,3];2;1`"
     putStrLn "  Note:"
@@ -36,10 +38,14 @@ main = do
 
     predicateString <- getLine
 
+    putStrLn "Do you want to perform the preprocessing step? (y/n)"
+
+    perfPreproc <- getLine
+
     putStrLn ""
     putStrLn "Output: "
 
-    print $ constructPC $ stringToPredicate predicateString
+    print $ (if perfPreproc == "y" then preprocess else id) $ constructPC $ doublePredicate $ stringToPredicate predicateString
 
     -- putStrLn ""
     -- putStrLn "--------------------------------------"

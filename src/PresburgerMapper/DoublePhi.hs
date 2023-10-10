@@ -6,7 +6,6 @@ import Helper.List (flatten)
 import qualified Types.Predicates as Predicates (RemainderPredicate(..), ThresholdPredicate(..), BasePredicate(..), Predicate(..))
 
 double :: [[Int]] -> [[Int]]
--- double = map (flatten . map (\x -> [[x], [2*x]])) -- see Definition 2 (ist der Link von 7.6.1 zu Definition 2 richtig?)
 double [] = []
 double [[]] = [[]]
 double (x:xs) = [[head x], [2 * head x]] ++ double xs

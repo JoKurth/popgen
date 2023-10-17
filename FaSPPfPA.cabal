@@ -39,6 +39,7 @@ executable Code
     other-modules:    PresburgerMapper.DoublePhi
 
     other-modules:    Transformer.Preprocess
+    other-modules:    Transformer.Binarise
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:

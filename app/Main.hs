@@ -7,6 +7,7 @@ import PresburgerMapper.Remainder
 import PresburgerMapper.Threshold
 import PresburgerMapper.Union
 import Transformer.Preprocess
+import Transformer.Binarise
 
 import Data.List.Split (splitOn)
 import qualified Data.Set as Set
@@ -45,7 +46,7 @@ main = do
     putStrLn ""
     putStrLn "Output: "
 
-    print $ (if perfPreproc == "y" then preprocess else id) $ constructPC $ doublePredicate $ stringToPredicate predicateString
+    print $ binarise $ (if perfPreproc == "y" then preprocess else id) $ constructPC $ doublePredicate $ stringToPredicate predicateString
 
     -- putStrLn ""
     -- putStrLn "--------------------------------------"

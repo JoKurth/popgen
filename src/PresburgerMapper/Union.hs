@@ -5,13 +5,15 @@ module PresburgerMapper.Union (
 
 import Helper.Math
 import Helper.List
-import qualified Types.PopulationComputer as PC (OutputValues(..), PopulationComputer(..))
-import qualified Types.Predicates as Predicates (Predicate(..), BoolOp(..), NotOp(..), RemainderPredicate(..), ThresholdPredicate(..), BasePredicate)
+import Helper.BooleanCircuit (buildUnionCircuit)
 import qualified PresburgerMapper.Remainder as RemainderMapper (constructRemainderPC)
 import qualified PresburgerMapper.Threshold as ThresholdMapper (constructThresholdPC)
+import qualified Types.PopulationComputer as PC (OutputValues(..), PopulationComputer(..), Gate(..), intGateToStringGate)
+import qualified Types.Predicates as Predicates (Predicate(..), BoolOp(..), NotOp(..), RemainderPredicate(..), ThresholdPredicate(..), BasePredicate)
 
 import qualified Data.Set as Set
 import qualified Data.MultiSet as MultiSet
+import qualified Data.Bifunctor
 
 
 -- Helper
@@ -91,15 +93,16 @@ calcDistributeTransitions inputVariables predicates = Set.fromList $ mapWithInde
         numberOfCoefficientInputAgentsPerVariable = combineLists numberOfBinaryCoefficientsPerCoefficientPerPredicate
 
 
-combineSubPCs :: [Predicates.BasePredicate] -> [PC.PopulationComputer Int] -> PC.PopulationComputer String
-combineSubPCs predList pcs = PC.PC{
+combineSubPCs :: Predicates.Predicate -> [PC.PopulationComputer Int] -> PC.PopulationComputer String
+combineSubPCs pred pcs = PC.PC{
     PC.states = Set.union renamedStates inputVariables,
     PC.delta = Set.unions joinedTransitions,
     PC.input = inputVariables,
-    -- PC.output = outputFunction,
+    PC.output = outputFunction,
     PC.helpers = numOfHelpers
 }
     where
+        predList = predicateToPredicateList pred
         inputVariables = Set.fromList $ map (\i -> "x_" ++ show i) [1 .. totalNumberOfVariables predList] -- the input variables
         renamedStates = Set.unions $ mapWithIndex renameStates pcs
         joinedTransitions =    mapWithIndex (\i pc -> renameStatesInTransitions i $ PC.delta pc) pcs -- subcomputer
@@ -107,9 +110,13 @@ combineSubPCs predList pcs = PC.PC{
         coefficients = map extractCoefficientsFromPredicates predList
         bar = map (map length) coefficients
         numOfHelpers = MultiSet.map show $ MultiSet.insertMany 0 (max (maxFromList $ map maxFromList bar) 2 - 1) $ MultiSet.unions $ map PC.helpers pcs
+        outputFunction = buildUnionCircuit pred $ mapWithIndex renameGates circuits
+            where
+                circuits = map PC.output pcs
+                renameGate i (PC.Input g) = PC.Input $ renameState i g
+                renameGate _ g = PC.intGateToStringGate g
+                renameGates i = Data.Bifunctor.first (map (renameGate i))
 
 -- Export
 constructPC :: Predicates.Predicate -> PC.PopulationComputer String
-constructPC pred = combineSubPCs inputPredicates $ constructSubPCs pred
-    where
-        inputPredicates = predicateToPredicateList pred
+constructPC pred = combineSubPCs pred $ constructSubPCs pred

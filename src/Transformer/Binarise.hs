@@ -1,9 +1,11 @@
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use first" #-}
 module Transformer.Binarise (
     binarise
 ) where
 
-import qualified Types.PopulationComputer as PC (PopulationComputer(..))
 import Helper.List
+import qualified Types.PopulationComputer as PC (PopulationComputer(..), Gate(..), BooleanCircuit)
 
 import qualified Data.MultiSet as MultiSet
 import qualified Data.Set as Set
@@ -38,6 +40,20 @@ buildIdentifiedTStates transition i
 buildSIdentifiedState state = buildStateName state 1
 
 
+-- | index = the index of the gate we are currently processing
+buildOutputFunction :: PC.BooleanCircuit String -> Int -> PC.BooleanCircuit String
+buildOutputFunction ([], edges) _ = ([], edges)
+buildOutputFunction ((PC.Input "0") : gates, edges) index = (PC.Input "0" : fst nextCircuit, snd nextCircuit)
+    where
+        nextCircuit = buildOutputFunction (gates, edges) (index + 1)
+buildOutputFunction ((PC.Input x) : gates, edges) index = (PC.OR : fst nextCircuit ++ [PC.Input $ buildStateName x 1, PC.Input $ buildStateName x 0], snd nextCircuit ++ [(index, (baseNewIndex + 1, index + baseNewIndex + 2))])
+    where
+        nextCircuit = buildOutputFunction (gates, edges) (index + 1)
+        baseNewIndex = index + length (fst nextCircuit)
+buildOutputFunction (gate:xs, edges) index = (gate : fst nextCircuit, snd nextCircuit)
+    where
+        nextCircuit = buildOutputFunction (xs, edges) (index + 1)
+
 -- construction
 
 binarise :: PC.PopulationComputer String -> PC.PopulationComputer String
@@ -45,7 +61,7 @@ binarise pc = PC.PC {
     PC.states = Set.fromList states,
     PC.delta = Set.fromList transitions,
     PC.input = Set.map (`buildStateName` 1) (PC.input pc),
-    -- PC.output = 
+    PC.output = buildOutputFunction (PC.output pc) 0,
     PC.helpers = MultiSet.map (`buildStateName` 1) $ PC.helpers pc
 }
     where

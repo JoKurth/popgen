@@ -4,7 +4,8 @@ module PresburgerMapper.Threshold (
 
 import Helper.Math
 import Helper.List
-import qualified Types.PopulationComputer as PC (OutputValues(..), PopulationComputer(..))
+import Helper.BooleanCircuit (buildThresholdCircuit)
+import qualified Types.PopulationComputer as PC (OutputValues(..), PopulationComputer(..), Gate(..), Edge(..), BooleanCircuit(..))
 import qualified Types.Predicates as Predicates (ThresholdPredicate(..))
 
 import qualified Data.Set as Set
@@ -19,7 +20,7 @@ constructThresholdPC (Predicates.TP coefficients c) s = PC.PC {         -- s has
     PC.states = Set.fromList stateList,
     PC.delta = Set.fromList transitions,
     PC.input = Set.fromList $ flatten coefficients,
-    -- PC.output = outputFunction,
+    PC.output = outputFunction,
     PC.helpers = MultiSet.insertMany 0 d MultiSet.empty
 }
     where
@@ -31,6 +32,4 @@ constructThresholdPC (Predicates.TP coefficients c) s = PC.PC {         -- s has
                       ++ [(MultiSet.fromList [negate $ 2^d, 2^d], MultiSet.fromList [0, 0])]                                           -- cancel
                       ++ [(MultiSet.fromList [2^d, negate $ 2^(d-1)], MultiSet.fromList [0, 2^(d-1)])]                                 -- cancel 2nd highest
                       ++ [(MultiSet.fromList [negate $ 2^d, 2^(d-1)], MultiSet.fromList [0, negate $ 2^(d-1)])]                        -- cancel 2nd highest
-        -- outputFunction config = if sum (multiSetSupport config) >= c
-        --                             then PC.T
-        --                             else PC.F
+        outputFunction = buildThresholdCircuit c d

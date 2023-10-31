@@ -12,7 +12,7 @@ preprocess pc = PC.PC {
     PC.states = Set.unions [PC.states pc, Set.fromList ["h"], Set.fromList xStars],
     PC.delta = Set.union (PC.delta pc) (Set.fromList starTransitions),
     PC.input = Set.fromList xStars,
-    -- PC.output = 
+    PC.output = PC.output pc,
     PC.helpers = MultiSet.union (PC.helpers pc) (MultiSet.insert "h" MultiSet.empty)
 }
     where

@@ -30,6 +30,7 @@ executable Code
 
     other-modules:    Helper.Math
     other-modules:    Helper.List
+    other-modules:    Helper.BooleanCircuit
 
     other-modules:    InputOutput.MapInput
 
@@ -40,6 +41,9 @@ executable Code
 
     other-modules:    Transformer.Preprocess
     other-modules:    Transformer.Binarise
+    -- other-modules:    Transformer.Focalise
+    -- other-modules:    Transformer.Autarkify
+    -- other-modules:    Transformer.Distribute
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
@@ -49,7 +53,8 @@ executable Code
                       split ^>= 0.2.3.5,
                       regex-tdfa ^>= 1.3.2,
                       parsec ^>= 3.1.16,
-                      boolexpr ^>= 0.2
+                      boolexpr ^>= 0.2,
+                      unordered-containers ^>= 0.2.19,
     hs-source-dirs:   app,
                       src
     default-language: Haskell2010

@@ -43,6 +43,7 @@ executable Code
     other-modules:    Transformer.Binarise
     other-modules:    Transformer.Focalise
     other-modules:    Transformer.Autarkify
+    other-modules:    Transformer.Distribute
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:

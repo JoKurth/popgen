@@ -1,18 +1,18 @@
 module Main where
 
 import qualified Types.PopulationComputer as PC (OutputValues(..), PopulationComputer, PopulationProtocol)
-import Types.Predicates
+import InputOutput.MapInput
 import PresburgerMapper.DoublePhi
-import PresburgerMapper.Remainder
-import PresburgerMapper.Threshold
 import PresburgerMapper.Union
 import Transformer.Preprocess
 import Transformer.Binarise
+import Transformer.Focalise
+import Transformer.Autarkify
+import Transformer.Distribute
 
 import Data.List.Split (splitOn)
 import qualified Data.Set as Set
 import qualified Data.MultiSet as MultiSet
-import InputOutput.MapInput (stringToPredicate)
 
 main :: IO ()
 main = do
@@ -46,7 +46,7 @@ main = do
     putStrLn ""
     putStrLn "Output: "
 
-    print $ binarise $ (if perfPreproc == "y" then preprocess else id) $ constructPC $ doublePredicate $ stringToPredicate predicateString
+    print $ distribute $ autarkify $ focalise $ binarise $ (if perfPreproc == "y" then preprocess else id) $ constructPC $ doublePredicate $ stringToPredicate predicateString
 
     -- putStrLn ""
     -- putStrLn "--------------------------------------"

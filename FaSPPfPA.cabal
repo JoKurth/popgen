@@ -41,9 +41,7 @@ executable Code
 
     other-modules:    Transformer.Preprocess
     other-modules:    Transformer.Binarise
-    -- other-modules:    Transformer.Focalise
-    -- other-modules:    Transformer.Autarkify
-    -- other-modules:    Transformer.Distribute
+    other-modules:    Transformer.Focalise
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:

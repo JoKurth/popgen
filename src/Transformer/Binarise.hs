@@ -57,7 +57,7 @@ buildOutputFunction (gate:xs, edges) index = (gate : fst nextCircuit, snd nextCi
 -- construction
 
 binarise :: PC.PopulationComputer String -> PC.PopulationComputer String
-binarise pc = PC.PC {
+binarise pc = PC.PCB {
     PC.states = Set.fromList states,
     PC.delta = Set.fromList transitions,
     PC.input = Set.map (`buildStateName` 1) (PC.input pc),

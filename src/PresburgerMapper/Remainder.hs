@@ -16,7 +16,7 @@ import qualified Data.MultiSet as MultiSet
 
 -- | We apply the same restrictions to the inputs as done in the paper.
 constructRemainderPC :: Predicates.RemainderPredicate -> PC.PopulationComputer Int
-constructRemainderPC (Predicates.RP coefficients m c) = PC.PC {
+constructRemainderPC (Predicates.RP coefficients m c) = PC.PCB {
     PC.states = Set.fromList stateList,
     PC.delta = Set.fromList transitions,
     PC.input = Set.fromList $ flatten coefficients,

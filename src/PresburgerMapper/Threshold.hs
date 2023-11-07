@@ -16,7 +16,7 @@ import qualified Data.MultiSet as MultiSet
 
 -- | We apply the same restrictions to the inputs as done in the paper.
 constructThresholdPC :: Predicates.ThresholdPredicate -> Int -> PC.PopulationComputer Int
-constructThresholdPC (Predicates.TP coefficients c) s = PC.PC {         -- s has the same meaning as in the paper (page 18)
+constructThresholdPC (Predicates.TP coefficients c) s = PC.PCB {         -- s has the same meaning as in the paper (page 18)
     PC.states = Set.fromList stateList,
     PC.delta = Set.fromList transitions,
     PC.input = Set.fromList $ flatten coefficients,

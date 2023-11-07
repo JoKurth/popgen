@@ -8,7 +8,7 @@ import qualified Data.Set as Set
 import qualified Data.MultiSet as MultiSet
 
 preprocess :: PC.PopulationComputer String -> PC.PopulationComputer String
-preprocess pc = PC.PC {
+preprocess pc = PC.PCB {
     PC.states = Set.unions [PC.states pc, Set.fromList ["h"], Set.fromList xStars],
     PC.delta = Set.union (PC.delta pc) (Set.fromList starTransitions),
     PC.input = Set.fromList xStars,

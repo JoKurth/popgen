@@ -94,7 +94,7 @@ calcDistributeTransitions inputVariables predicates = Set.fromList $ mapWithInde
 
 
 combineSubPCs :: Predicates.Predicate -> [PC.PopulationComputer Int] -> PC.PopulationComputer String
-combineSubPCs pred pcs = PC.PC{
+combineSubPCs pred pcs = PC.PCB{
     PC.states = Set.union renamedStates inputVariables,
     PC.delta = Set.unions joinedTransitions,
     PC.input = inputVariables,

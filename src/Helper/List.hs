@@ -1,6 +1,7 @@
 module Helper.List
 where
 
+import qualified Data.HashSet as HashSet
 
 -- | The first index is 1
 mapWithIndex :: (Int -> a -> b) -> [a] -> [b]
@@ -37,5 +38,12 @@ combineLists [x] = x
 combineLists [x, y] = combine x y
 combineLists (x:y:xs) = combine (combine x y) $ combineLists xs
 
+
 extractIndexFromAllLists :: Int -> [[a]] -> [a]
 extractIndexFromAllLists index lists = map (!! index) $ filter (\list -> length list > index) lists
+
+
+filterFromOtherList :: (Eq a, Show a) => [a] -> [a] -> [a]
+filterFromOtherList list filterList = filter (\e -> not $ HashSet.member (show e) hset) list
+    where
+        hset = HashSet.fromList $ map show filterList

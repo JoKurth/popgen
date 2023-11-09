@@ -1,14 +1,20 @@
--- module Transformer.Distribute (
---     distribute
--- ) where
+module Transformer.Distribute (
+    distribute
+) where
 
-module Transformer.Distribute
-where
-
+import Helper.List
 import qualified Types.PopulationComputer as PC (PopulationComputer(..), PopulationProtocol(..), OutputLists (..))
 
 import qualified Data.MultiSet as MultiSet
 import qualified Data.Set as Set
+
+
+-- das ist sehr langsam. lief jetzt über 1,5 stunden und war immer noch nicht fertig.
+-- optimierungen: keine konvertierung in sets. stattdessen die listen zurückgeben. durch die umbenennung sollten doppelte dann auch sowieso wegfallen
+--                das filtern umschreiben (die variante mit den hashmaps und dann alle auf einmal filtern) => bringt das runter von > 1,5 std auf 2 min 10 bis 20 sek
+
+-- wie gehts weiter: memory-usage einsparen. nach jeder (erfolgreichen) optimierung commiten (jetzt auch) und kurz notieren, dass es besser läuft (screenshot)
+-- potentielle weitere optimierung: strictness -> googlen
 
 
 getQFromTransition t = MultiSet.findMin $ fst t    -- todo auslagern
@@ -78,14 +84,9 @@ distribute pc = PC.PP {
                                 i2 <- [0, 1],
                                 t2 <- [0, 1]]
         transitions = certifyTransitions ++
-                      filter (\t -> not $ containsSameAs t certifyTransitions) convinceTransitions ++
-                      filter (\t -> not $ containsSameAs t certifyTransitions) dropTransitions ++
-                      filter (\t -> not (containsSameAs t certifyTransitions) && not (containsSameAs t convinceTransitions) && not (containsSameAs t dropTransitions)) noopTransitions
-            where
-                -- this is a very inefficient way to do this. maybe we have to optimize it
-                containsSameAs :: (MultiSet.MultiSet String, MultiSet.MultiSet String) -> [(MultiSet.MultiSet String, MultiSet.MultiSet String)] -> Bool
-                containsSameAs _ [] = False
-                containsSameAs t (x:xs) = fst t == fst x || containsSameAs t xs
+                      filterFromOtherList convinceTransitions certifyTransitions ++
+                      filterFromOtherList dropTransitions certifyTransitions ++
+                      filterFromOtherList (filterFromOtherList (filterFromOtherList noopTransitions certifyTransitions) convinceTransitions) dropTransitions
         output = PC.Output {
             PC.true = [buildState q 1 token | q <- Set.toList (PC.states pc), token <- [0, 1]],
             PC.false = [buildState q 0 token | q <- Set.toList (PC.states pc), token <- [0, 1]]

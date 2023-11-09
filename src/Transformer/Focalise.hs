@@ -88,7 +88,7 @@ focalise pc = PC.PCL {
                                 b <- [0, 1],
                                 q <- buildGateTransitionQState e2 e b]               -- gate
         resetTransitions = [(MultiSet.fromList [show i, buildSuppState qi (show b)], MultiSet.fromList [show (i + 1), buildSuppState qi "0"]) |
-                                i <- [0 .. length qSupp - 1], let qi = qSupp !! i, b <- [0, 1]] ++             -- reset     -- devitaiont: i starts at 0 instead of 1, because it is easier for the indices (because out indices start at 0 instead of 1 as in the paper). therefore we use i+1 later
+                                i <- [0 .. length oldStates - 1], let qi = oldStates !! i, b <- [0, 1]] ++             -- reset     -- devitaiont: i starts at 0 instead of 1, because it is easier for the indices (because out indices start at 0 instead of 1 as in the paper). therefore we use i+1 later
                             [(MultiSet.fromList [show (Set.size (PC.states pc) + i), buildGateState (gateToGateStateName g e) b1 b2 b3], MultiSet.fromList [show (Set.size (PC.states pc) + i + 1), buildGateState (gateToGateStateName g e) "undef" "undef" "undef"]) |
                             --  we have to substract 3 because: 1 as the difference between length and max index; and another 2 for the two extra const gate states; div by 27 because each gate is mapped to 27 states. this is very hacky
                                 i <- [0 .. length qGate - 3], let e = sortedEdges !! (i `div` 27), let g = gates !! fst e, b1 <- boolVals, b2 <- boolVals, b3 <- boolVals]             -- reset        -- optimizaiton: iterate smarter over i and e; deviation: above

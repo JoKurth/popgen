@@ -46,7 +46,7 @@ buildOutputFunction ([], edges) _ = ([], edges)
 buildOutputFunction ((PC.Input "0") : gates, edges) index = (PC.Input "0" : fst nextCircuit, snd nextCircuit)
     where
         nextCircuit = buildOutputFunction (gates, edges) (index + 1)
-buildOutputFunction ((PC.Input x) : gates, edges) index = (PC.OR : fst nextCircuit ++ [PC.Input $ buildStateName x 1, PC.Input $ buildStateName x 0], (index, (baseNewIndex + 1, index + baseNewIndex + 2)) : snd nextCircuit)
+buildOutputFunction ((PC.Input x) : gates, edges) index = (PC.OR : fst nextCircuit ++ [PC.Input $ buildStateName x 1, PC.Input $ buildStateName x 0], (index, (baseNewIndex + 1, baseNewIndex + 2)) : snd nextCircuit)
     where
         nextCircuit = buildOutputFunction (gates, edges) (index + 1)
         baseNewIndex = index + length (fst nextCircuit)

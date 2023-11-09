@@ -65,26 +65,28 @@ binarise pc = PC.PCB {
     PC.helpers = MultiSet.map (`buildStateName` 1) $ PC.helpers pc
 }
     where
+        oldStates = Set.toList $ PC.states pc
+        oldTransitions = Set.toList $ PC.delta pc
         multiplicity q = maxFromList $ map (\(input, _) -> MultiSet.occur q input) $ Set.toList $ PC.delta pc
-        states = [buildStateName q i | q <- Set.toList (PC.states pc),
+        states = [buildStateName q i | q <- oldStates,
                                        i <- [0 .. multiplicity q]] ++                       -- stack
-                 [buildTStates Q i t | t <- Set.toList (PC.delta pc),
+                 [buildTStates Q i t | t <- oldTransitions,
                                      let q = getQFromTransition t,
                                      i <- [0 .. multiplicity q]] ++                         -- commit
-                 [buildIdentifiedTStates t i | t <- Set.toList (PC.delta pc),
+                 [buildIdentifiedTStates t i | t <- oldTransitions,
                                                i <- [1 .. MultiSet.size (fst t)]]           -- execute
         stackTransitions = [(MultiSet.fromList [buildStateName q i, buildStateName q j], MultiSet.fromList [buildStateName q (i + j), buildStateName q 0]) |
-                                q <- Set.toList (PC.states pc),
+                                q <- oldStates,
                                 i <- [0 .. multiplicity q - 1],
                                 j <- [0 .. multiplicity q - 1],
                                 i + j <= multiplicity q] ++                                 -- stack
                            [(MultiSet.fromList [buildStateName q i, buildStateName q j], MultiSet.fromList [buildStateName q (multiplicity q), buildStateName q (i + j - multiplicity q)]) |
-                                q <- Set.toList (PC.states pc),
+                                q <- oldStates,
                                 i <- [0 .. multiplicity q - 1],
                                 j <- [0 .. multiplicity q - 1],
                                 i + j >= multiplicity q]                                    -- stack
         commitTransitions = [(MultiSet.fromList [buildStateName q i, buildStateName p j], MultiSet.fromList [buildTStates Q (i - numOfQ) t, buildStateName p (j - numOfP)]) |
-                                t <- Set.toList (PC.delta pc),
+                                t <- oldTransitions,
                                 let q = getQFromTransition t,
                                 let p = getPFromTransition t,
                                 q /= p,
@@ -95,7 +97,7 @@ binarise pc = PC.PCB {
                                 j <- [0 .. multiplicity q],
                                 j >= numOfP] ++                                             -- commit
                             [(MultiSet.fromList [buildStateName q i, buildStateName q j], MultiSet.fromList [buildTStates Q (i + j - numOfQ) t, buildStateName q 0]) |
-                                t <- Set.toList (PC.delta pc),
+                                t <- oldTransitions,
                                 let q = getQFromTransition t,
                                 let p = getPFromTransition t,
                                 q == p,
@@ -105,7 +107,7 @@ binarise pc = PC.PCB {
                                 i + j >= numOfQ,
                                 i + j - numOfQ <= multiplicity q] ++                        -- commit
                             [(MultiSet.fromList [buildStateName q i, buildStateName q j], MultiSet.fromList [buildTStates Q (i + j - numOfQ - multiplicity q) t, buildStateName q (multiplicity q)]) |
-                                t <- Set.toList (PC.delta pc),
+                                t <- oldTransitions,
                                 let q = getQFromTransition t,
                                 let p = getPFromTransition t,
                                 q == p,
@@ -115,18 +117,18 @@ binarise pc = PC.PCB {
                                 i + j >= numOfQ,
                                 i + j - numOfQ > multiplicity q]                            -- commit
         transferTransitions = [(MultiSet.fromList [buildTStates Q i t, buildStateName q 0], MultiSet.fromList [buildTStates Q 0 t, buildStateName q i]) |
-                                t <- Set.toList (PC.delta pc),
+                                t <- oldTransitions,
                                 let q = getQFromTransition t,
                                 i <- [1 .. multiplicity q]]                                 -- transfer
         executeTransitions = [(MultiSet.fromList [buildIdentifiedTStates t i, buildStateName p 0], MultiSet.fromList [buildIdentifiedTStates t (i+1), buildSIdentifiedState (s !! (i - 1))]) |
-                                t <- Set.toList (PC.delta pc),
+                                t <- oldTransitions,
                                 let q = getQFromTransition t,
                                 let p = getPFromTransition t,
                                 let s = MultiSet.toList (snd t),
                                 i <- [1 .. length s - 1],
                                 i <= MultiSet.occur p (fst t)] ++
                              [(MultiSet.fromList [buildIdentifiedTStates t i, buildStateName q 0], MultiSet.fromList [buildIdentifiedTStates t (i+1), buildSIdentifiedState (s !! (i - 1))]) |
-                                t <- Set.toList (PC.delta pc),
+                                t <- oldTransitions,
                                 let q = getQFromTransition t,
                                 let p = getPFromTransition t,
                                 let s = MultiSet.toList (snd t),

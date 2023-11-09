@@ -52,11 +52,12 @@ focalise pc = PC.PCL {
                                     MultiSet.fromList ["0"]]
 }
     where
+        oldStates = Set.toList $ PC.states pc
         gates = fst $ PC.output pc
         edges = snd $ PC.output pc
         sortedEdges = sortBy sortEdges edges
-        qOrig = [buildOrigState oldState flag | oldState <- Set.toList (PC.states pc), flag <- flags]
-        qSupp = [buildSuppState oldState indicator | oldState <- Set.toList (PC.states pc), indicator <- ["0", "1", "!"]]
+        qOrig = [buildOrigState oldState flag | oldState <- oldStates, flag <- flags]
+        qSupp = [buildSuppState oldState indicator | oldState <- oldStates, indicator <- ["0", "1", "!"]]
         qGate = [buildGateState (gateToGateStateName g e) val1 val2 val3 | e <- edges, let g = gates !! fst e, val1 <- boolVals, val2 <- boolVals, val3 <- boolVals] ++ [buildGateState "True" "1" "1" "1", buildGateState "False" "0" "0" "0"] -- they are use to modell input-states (i.e. states without edges). thus we have to add them manually
         qReset = [show i | i <- [0 .. Set.size (PC.states pc) + length (filter (not . PC.isInputGate) gates)]]
         states = qOrig ++ qSupp ++ qGate ++ qReset
@@ -69,10 +70,10 @@ focalise pc = PC.PCL {
                                     flag1 <- flags,
                                     flag2 <- flags]                        -- execute
         denotifyTransitions = [(MultiSet.fromList [buildOrigState q "+", buildOrigState p "+"], MultiSet.fromList [buildOrigState q "+", buildOrigState p "-"]) |
-                                    q <- Set.toList (PC.states pc),
-                                    p <- Set.toList (PC.states pc)]              -- denotify
+                                    q <- oldStates,
+                                    p <- oldStates]              -- denotify
         detectTransitions = [(MultiSet.fromList [buildSuppState q "0", buildOrigState q "-"], MultiSet.fromList [buildSuppState q "!", buildOrigState q "-"]) |
-                                q <- Set.toList (PC.states pc)]              -- detect
+                                q <- oldStates]              -- detect
         gateTransitions = [(MultiSet.fromList [buildGateState (gateToGateStateName g e) "undef" "undef" "undef", q], MultiSet.fromList [buildGateState (gateToGateStateName g e) "undef" (show b) "undef", q]) |
                                 e <- edges,
                                 let g = gates !! fst e,
@@ -92,15 +93,15 @@ focalise pc = PC.PCL {
                             --  we have to substract 3 because: 1 as the difference between length and max index; and another 2 for the two extra const gate states; div by 27 because each gate is mapped to 27 states. this is very hacky
                                 i <- [0 .. length qGate - 3], let e = sortedEdges !! (i `div` 27), let g = gates !! fst e, b1 <- boolVals, b2 <- boolVals, b3 <- boolVals]             -- reset        -- optimizaiton: iterate smarter over i and e; deviation: above
         initResetTransitions = [(MultiSet.fromList [buildOrigState q "+", i], MultiSet.fromList [buildOrigState q "-", "0"]) |
-                                    q <- Set.toList (PC.states pc), i <- qReset] ++             -- init-reset
+                                    q <- oldStates, i <- qReset] ++             -- init-reset
                                 [(MultiSet.fromList [buildOrigState q "!", i], MultiSet.fromList [buildOrigState q "1", show $ min (read i) (length $ PC.states pc)]) |
-                                    q <- Set.toList (PC.states pc), i <- qReset] ++             -- init-reset
+                                    q <- oldStates, i <- qReset] ++             -- init-reset
                                 [(MultiSet.fromList [i, j], MultiSet.fromList ["0", buildOrigState qh "-"]) |
                                     i <- qReset, j <- qReset]              -- init-reset
                                         where
                                             qh = head $ MultiSet.toList $ PC.helpers pc
         leaderTransitions = [(MultiSet.fromList [buildSuppState q i1, buildSuppState q i2], MultiSet.fromList [buildSuppState q i1, "0"]) |
-                                q <- Set.toList (PC.states pc), i1 <- ["0", "1", "!"], i2 <- ["0", "1", "!"]] ++             -- leader
+                                q <- oldStates, i1 <- ["0", "1", "!"], i2 <- ["0", "1", "!"]] ++             -- leader
                             [(MultiSet.fromList [buildGateState (gateToGateStateName g e) v11 v12 v13, buildGateState (gateToGateStateName g e) v21 v22 v23], MultiSet.fromList [buildGateState (gateToGateStateName g e) v11 v12 v13, "0"]) |
                                 e <- edges, let g = gates !! fst e, v11 <- boolVals, v12 <- boolVals, v13 <- boolVals, v21 <- boolVals, v22 <- boolVals, v23 <- boolVals]                -- leader
         transitions = executeTransitions ++ filter (\t -> not $ containsSameAs t executeTransitions) denotifyTransitions ++ detectTransitions ++ gateTransitions ++ resetTransitions ++ initResetTransitions ++ leaderTransitions

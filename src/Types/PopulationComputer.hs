@@ -57,8 +57,8 @@ data PopulationComputer a = PCB {
 -- type PopulationComputer a = (Q a, Delta a, I a, O a, H a) -- vllt als record
 
 data PopulationProtocol a = PP {
-    statesPP :: Q a,
-    deltaPP :: Delta a,
+    statesPP :: [a],
+    deltaPP :: [(C a, C a)],
     inputPP :: I a,
     outputPP :: OutputLists a
 }

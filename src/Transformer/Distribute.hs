@@ -7,6 +7,7 @@ import qualified Types.PopulationComputer as PC (PopulationComputer(..), Populat
 
 import qualified Data.MultiSet as MultiSet
 import qualified Data.Set as Set
+import Data.List (nub)
 
 
 -- das ist sehr langsam. lief jetzt über 1,5 stunden und war immer noch nicht fertig.
@@ -33,15 +34,16 @@ buildState q i t = "(" ++ q ++ "," ++ show i ++ "," ++ show t ++ ")"
 
 distribute :: PC.PopulationComputer String-> PC.PopulationProtocol String
 distribute pc = PC.PP {
-    PC.statesPP = Set.fromList states,
-    PC.deltaPP = Set.fromList transitions,
+    PC.statesPP = states,
+    PC.deltaPP = transitions,
     PC.inputPP = Set.map (\q -> buildState q 0 0) (PC.input pc),
     PC.outputPP = output
 }
     where
-        states = [buildState q opinion token | q <- Set.toList (PC.states pc), opinion <- [0, 1], token <- [0, 1]]
+        oldStates = Set.toAscList $ PC.states pc
         oldTransitions = Set.toList (PC.delta pc)
-        transitionsForBuilding = [((q, p), (q', p')) | q <- Set.toList (PC.states pc), p <- Set.toList (PC.states pc), let t = getTransitionWithQAndP q p oldTransitions, let q' = fst t, let p' = snd t]
+        states = [buildState q opinion token | q <- oldStates, opinion <- [0, 1], token <- [0, 1]]
+        transitionsForBuilding = [((q, p), (q', p')) | q <- oldStates, p <- oldStates, p >= q, let t = getTransitionWithQAndP q p oldTransitions, let q' = fst t, let p' = snd t]
         certifyTransitions = [(MultiSet.fromList [buildState q i1 t1, buildState p i2 t2], MultiSet.fromList [buildState q' i 1, buildState p' i 1]) |
                                 t <- transitionsForBuilding,
                                 let q = fst $ fst t,

@@ -29,7 +29,7 @@ buildGateState gate val1 val2 val3 = "(" ++ gate ++ "," ++ val1 ++ "," ++ val2 +
 buildGateTransitionQState :: PC.Gate String -> PC.Edge -> Int -> [String]
 buildGateTransitionQState (PC.Input "0") _ _ = [buildGateState "False" "0" "0" "0"]
 buildGateTransitionQState (PC.Input q) _ b = [buildSuppState q (show b)]
-buildGateTransitionQState PC.ConstT _ _ = [buildGateState "True" "1" "1" "1"]       -- const gates are considered as input-gates but how do i handle them actually
+buildGateTransitionQState PC.ConstT _ _ = [buildGateState "True" "1" "1" "1"]
 buildGateTransitionQState PC.ConstF _ _ = [buildGateState "False" "0" "0" "0"]
 buildGateTransitionQState g e b = [buildGateState (gateToGateStateName g e) (show b) i j | i <- ["0", "1"], j <- ["0", "1"]]
 
@@ -87,8 +87,8 @@ focalise pc = PC.PCL {
                                 i <- [0, 1],
                                 b <- [0, 1],
                                 q <- buildGateTransitionQState e2 e b]               -- gate
-        resetTransitions = [(MultiSet.fromList [show i, buildSuppState qi (show b)], MultiSet.fromList [show (i + 1), buildSuppState qi "0"]) |
-                                i <- [0 .. length oldStates - 1], let qi = oldStates !! i, b <- [0, 1]] ++             -- reset     -- devitaiont: i starts at 0 instead of 1, because it is easier for the indices (because out indices start at 0 instead of 1 as in the paper). therefore we use i+1 later
+        resetTransitions = [(MultiSet.fromList [show i, buildSuppState qi b], MultiSet.fromList [show (i + 1), buildSuppState qi "0"]) |
+                                i <- [0 .. length oldStates - 1], let qi = oldStates !! i, b <- ["0", "1", "!"]] ++             -- reset     -- devitaiont: i starts at 0 instead of 1, because it is easier for the indices (because out indices start at 0 instead of 1 as in the paper). therefore we use i+1 later
                             [(MultiSet.fromList [show (Set.size (PC.states pc) + i), buildGateState (gateToGateStateName g e) b1 b2 b3], MultiSet.fromList [show (Set.size (PC.states pc) + i + 1), buildGateState (gateToGateStateName g e) "undef" "undef" "undef"]) |
                             --  we have to substract 3 because: 1 as the difference between length and max index; and another 2 for the two extra const gate states; div by 27 because each gate is mapped to 27 states. this is very hacky
                                 i <- [0 .. length qGate - 3], let e = sortedEdges !! (i `div` 27), let g = gates !! fst e, b1 <- boolVals, b2 <- boolVals, b3 <- boolVals]             -- reset        -- optimizaiton: iterate smarter over i and e; deviation: above

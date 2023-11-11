@@ -7,7 +7,8 @@ import qualified Types.PopulationComputer as PC (PopulationComputer(..), Populat
 
 import qualified Data.MultiSet as MultiSet
 import qualified Data.Set as Set
-import Data.List (nub)
+import qualified Data.HashSet as HashSet
+import qualified Data.HashMap.Strict as HashMap
 
 
 -- das ist sehr langsam. lief jetzt über 1,5 stunden und war immer noch nicht fertig.
@@ -23,13 +24,31 @@ getPFromTransition t = MultiSet.findMax $ fst t
 getQ'FromTransition t = MultiSet.findMin $ snd t    -- todo auslagern
 getP'FromTransition t = MultiSet.findMax $ snd t
 
--- inefficient!!
-getTransitionWithQAndP q p [] = (q, p)
-getTransitionWithQAndP q p (t:ts) = if MultiSet.member q (fst t) && MultiSet.member p (fst t)
-                                        then (getQ'FromTransition t, getP'FromTransition t)
-                                        else getTransitionWithQAndP q p ts
-
 buildState q i t = "(" ++ q ++ "," ++ show i ++ "," ++ show t ++ ")"
+
+
+buildTransitionsForBuilding :: [String] -> [(MultiSet.MultiSet String, MultiSet.MultiSet String)] -> [((String, String), (String, String))]
+buildTransitionsForBuilding oldStates oldTransitions = [((q, p), (q', p')) |
+                                                            q <- oldStates,
+                                                            p <- oldStates,
+                                                            p >= q,
+                                                            let t = getTransitionWithQAndP q p,
+                                                            let q' = fst t,
+                                                            let p' = snd t]
+    where
+        hmap = HashMap.fromList $ map (\t -> (show $ fst t, t)) oldTransitions      -- maybe we have to make things strict here
+        getTransitionWithQAndP :: String -> String -> (String, String)
+        getTransitionWithQAndP q p = case HashMap.lookup (show $ MultiSet.fromList [q, p]) hmap of
+                                        Just t -> (getQ'FromTransition t, getP'FromTransition t)
+                                        Nothing -> (q, p)
+
+
+filterTransitions :: [(MultiSet.MultiSet String, MultiSet.MultiSet String)] -> [(MultiSet.MultiSet String, MultiSet.MultiSet String)] -> [(MultiSet.MultiSet String, MultiSet.MultiSet String)] -> [(MultiSet.MultiSet String, MultiSet.MultiSet String)] -> [(MultiSet.MultiSet String, MultiSet.MultiSet String)]
+filterTransitions certify convince drop noop = certify ++ filterList hsetCert convince ++ filterList hsetCert drop ++ filterList hsetAll noop
+    where
+        hsetCert = HashSet.fromList $ map (show . fst) certify
+        hsetAll = HashSet.union hsetCert $ HashSet.fromList $ map (show . fst) $ convince ++ drop
+        filterList hset = filter (\x -> not $ HashSet.member (show $ fst x) hset)
 
 
 distribute :: PC.PopulationComputer String-> PC.PopulationProtocol String
@@ -43,29 +62,40 @@ distribute pc = PC.PP {
         oldStates = Set.toAscList $ PC.states pc
         oldTransitions = Set.toList (PC.delta pc)
         states = [buildState q opinion token | q <- oldStates, opinion <- [0, 1], token <- [0, 1]]
-        transitionsForBuilding = [((q, p), (q', p')) | q <- oldStates, p <- oldStates, p >= q, let t = getTransitionWithQAndP q p oldTransitions, let q' = fst t, let p' = snd t]
-        certifyTransitions = [(MultiSet.fromList [buildState q i1 t1, buildState p i2 t2], MultiSet.fromList [buildState q' i 1, buildState p' i 1]) |
-                                t <- transitionsForBuilding,
-                                let q = fst $ fst t,
-                                let p = snd $ fst t,
-                                let q' = fst $ snd t,
-                                let p' = snd $ snd t,
-                                q' `notElem` PC.true (PC.outputOL pc),
-                                q' `notElem` PC.false (PC.outputOL pc),
-                                p' `notElem` PC.true (PC.outputOL pc),
-                                p' `notElem` PC.false (PC.outputOL pc),
-                                i1 <- [0, 1],
-                                t1 <- [0, 1],
-                                i2 <- [0, 1],
-                                t2 <- [0, 1],
-                                i <- [0, 1]]
+        transitionsForBuilding = buildTransitionsForBuilding oldStates oldTransitions
+        certifyTransitions = [(MultiSet.fromList [buildState q i1 t1, buildState p i2 t2], MultiSet.fromList [buildState q' 1 1, buildState p' 1 1]) |
+                                    t <- transitionsForBuilding,
+                                    let q = fst $ fst t,
+                                    let p = snd $ fst t,
+                                    let q' = fst $ snd t,
+                                    let p' = snd $ snd t,
+                                    q' `elem` PC.true (PC.outputOL pc) || p' `elem` PC.true (PC.outputOL pc),
+                                    q' `notElem` PC.false (PC.outputOL pc),     -- this is a deviation from the paper, is it not?
+                                    p' `notElem` PC.false (PC.outputOL pc),     -- this is a deviation from the paper, is it not?
+                                    i1 <- [0, 1],
+                                    t1 <- [0, 1],
+                                    i2 <- [0, 1],
+                                    t2 <- [0, 1]] ++
+                              [(MultiSet.fromList [buildState q i1 t1, buildState p i2 t2], MultiSet.fromList [buildState q' 0 1, buildState p' 0 1]) |
+                                    t <- transitionsForBuilding,
+                                    let q = fst $ fst t,
+                                    let p = snd $ fst t,
+                                    let q' = fst $ snd t,
+                                    let p' = snd $ snd t,
+                                    q' `elem` PC.false (PC.outputOL pc) || p' `elem` PC.false (PC.outputOL pc),
+                                    q' `notElem` PC.true (PC.outputOL pc),      -- this is a deviation from the paper, is it not?
+                                    p' `notElem` PC.true (PC.outputOL pc),      -- this is a deviation from the paper, is it not?
+                                    i1 <- [0, 1],
+                                    t1 <- [0, 1],
+                                    i2 <- [0, 1],
+                                    t2 <- [0, 1]]
         convinceTransitions = [(MultiSet.fromList [buildState q i 1, buildState p (1 - i) 0], MultiSet.fromList [buildState q' i 0, buildState p' i 0]) |
-                                t <- transitionsForBuilding,
-                                let q = fst $ fst t,
-                                let p = snd $ fst t,
-                                let q' = fst $ snd t,
-                                let p' = snd $ snd t,
-                                i <- [0, 1]]
+                                    t <- transitionsForBuilding,
+                                    let q = fst $ fst t,
+                                    let p = snd $ fst t,
+                                    let q' = fst $ snd t,
+                                    let p' = snd $ snd t,
+                                    i <- [0, 1]]
         dropTransitions = [(MultiSet.fromList [buildState q i 1, buildState p (1 - i) 1], MultiSet.fromList [buildState q' i 0, buildState p' (1 - i) 0]) |
                                 t <- transitionsForBuilding,
                                 let q = fst $ fst t,
@@ -85,10 +115,7 @@ distribute pc = PC.PP {
                                 t1 <- [0, 1],
                                 i2 <- [0, 1],
                                 t2 <- [0, 1]]
-        transitions = certifyTransitions ++
-                      filterFromOtherList convinceTransitions certifyTransitions ++
-                      filterFromOtherList dropTransitions certifyTransitions ++
-                      filterFromOtherList (filterFromOtherList (filterFromOtherList noopTransitions certifyTransitions) convinceTransitions) dropTransitions
+        transitions = filterTransitions certifyTransitions convinceTransitions dropTransitions noopTransitions
         output = PC.Output {
             PC.true = [buildState q 1 token | q <- Set.toList (PC.states pc), token <- [0, 1]],
             PC.false = [buildState q 0 token | q <- Set.toList (PC.states pc), token <- [0, 1]]

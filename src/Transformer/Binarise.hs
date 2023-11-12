@@ -1,5 +1,6 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Use first" #-}
+
 module Transformer.Binarise (
     binarise
 ) where
@@ -11,10 +12,6 @@ import qualified Data.MultiSet as MultiSet
 import qualified Data.Set as Set
 
 
--- Helper
-
-renameTransitionsForStates t = "{(" ++ show (fst t) ++ "," ++ show (snd t) ++ ")}" -- maybe we want to switch to a map for an easy and faster lookup
-
 -- We define q as the minimal element in a configuration and p as the maximum element
 -- By doing so we can guarantee that q and p are always the same for a specific transition
 -- Since each transition only contains two distinct values we cover each value with selecting the minimum and maximum
@@ -22,7 +19,8 @@ renameTransitionsForStates t = "{(" ++ show (fst t) ++ "," ++ show (snd t) ++ ")
 getQFromTransition t = MultiSet.findMin $ fst t
 getPFromTransition t = MultiSet.findMax $ fst t
 
--- build states
+
+renameTransitionsForStates t = "{(" ++ show (fst t) ++ "," ++ show (snd t) ++ ")}" -- maybe we want to switch to a map for an easy and faster lookup
 
 buildStateName q number = "(" ++ q ++ "," ++ show number ++ ")"
 
@@ -54,7 +52,6 @@ buildOutputFunction (gate:xs, edges) index = (gate : fst nextCircuit, snd nextCi
     where
         nextCircuit = buildOutputFunction (xs, edges) (index + 1)
 
--- construction
 
 binarise :: PC.PopulationComputer String -> PC.PopulationComputer String
 binarise pc = PC.PCB {
@@ -67,7 +64,7 @@ binarise pc = PC.PCB {
     where
         oldStates = Set.toList $ PC.states pc
         oldTransitions = Set.toList $ PC.delta pc
-        multiplicity q = maxFromList $ map (\(input, _) -> MultiSet.occur q input) $ Set.toList $ PC.delta pc
+        multiplicity q = maxFromList $ map (\(input, _) -> MultiSet.occur q input) oldTransitions
         states = [buildStateName q i | q <- oldStates,
                                        i <- [0 .. multiplicity q]] ++                       -- stack
                  [buildTStates Q i t | t <- oldTransitions,
@@ -94,7 +91,7 @@ binarise pc = PC.PCB {
                                 let numOfP = MultiSet.occur p (fst t),
                                 i <- [0 .. multiplicity q],
                                 i >= numOfQ,
-                                j <- [0 .. multiplicity q],
+                                j <- [0 .. multiplicity p],
                                 j >= numOfP] ++                                             -- commit
                             [(MultiSet.fromList [buildStateName q i, buildStateName q j], MultiSet.fromList [buildTStates Q (i + j - numOfQ) t, buildStateName q 0]) |
                                 t <- oldTransitions,
@@ -134,7 +131,10 @@ binarise pc = PC.PCB {
                                 let s = MultiSet.toList (snd t),
                                 i <- [1 .. length s - 1],
                                 i > MultiSet.occur p (fst t)]                               -- execute
-        transitions = filter (not . containsSameR) stackTransitions ++ commitTransitions ++ filter (not . containsSameR) transferTransitions ++ filter (not . containsSameR) executeTransitions
+        transitions = filter (not . containsSameR) stackTransitions ++
+                      commitTransitions ++
+                      filter (not . containsSameR) transferTransitions ++
+                      filter (not . containsSameR) executeTransitions
             where
                 -- this is a very inefficient way to do this. maybe we have to optimize it
                 containsSameR = (`containsSameRHelper` commitTransitions)

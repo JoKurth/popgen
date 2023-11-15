@@ -107,7 +107,7 @@ focalise pc = PC.PCL {
                                 b3 <- boolVals]             -- reset
         initResetTransitions = [(MultiSet.fromList [buildOrigState q "+", i], MultiSet.fromList [buildOrigState q "-", "0"]) |
                                     q <- oldStates, i <- qReset] ++             -- init-reset
-                                [(MultiSet.fromList [buildOrigState q "!", i], MultiSet.fromList [buildOrigState q "1", show $ min (read i) (length $ oldStates)]) |
+                                [(MultiSet.fromList [buildOrigState q "!", i], MultiSet.fromList [buildOrigState q "1", show $ min (read i) (length oldStates)]) |
                                     q <- oldStates, i <- qReset] ++             -- init-reset
                                 [(MultiSet.fromList [i, j], MultiSet.fromList ["0", buildOrigState qh "-"]) |
                                     i <- qReset, j <- qReset]              -- init-reset

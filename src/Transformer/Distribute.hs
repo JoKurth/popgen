@@ -1,3 +1,6 @@
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use bimap" #-}
+
 module Transformer.Distribute (
     distribute
 ) where
@@ -51,16 +54,22 @@ filterTransitions certify convince drop noop = certify ++ filterList hsetCert co
         filterList hset = filter (\x -> not $ HashSet.member (show $ fst x) hset)
 
 
-distribute :: PC.PopulationComputer String-> PC.PopulationProtocol String
+distribute :: PC.PopulationComputer Int-> PC.PopulationProtocol String
 distribute pc = PC.PP {
     PC.statesPP = states,
     PC.deltaPP = transitions,
-    PC.inputPP = Set.map (\q -> buildState q 0 0) (PC.input pc),
+    PC.inputPP = Set.map (\q -> buildState (show q) 0 0) (PC.input pc),
     PC.outputPP = output
 }
     where
-        oldStates = Set.toAscList $ PC.states pc
-        oldTransitions = Set.toList (PC.delta pc)
+        oldStates = map show $ Set.toAscList $ PC.states pc
+        oldTransitions = map (\(input, output) -> (MultiSet.map show input, MultiSet.map show output)) $ Set.toList (PC.delta pc)
+        oldOutput = mapOutput $ PC.outputOL pc
+            where
+                mapOutput (PC.Output true false) = PC.Output {
+                    PC.true = map show true,
+                    PC.false = map show false
+                }
         states = [buildState q opinion token | q <- oldStates, opinion <- [0, 1], token <- [0, 1]]
         transitionsForBuilding = buildTransitionsForBuilding oldStates oldTransitions
         certifyTransitions = [(MultiSet.fromList [buildState q i1 t1, buildState p i2 t2], MultiSet.fromList [buildState q' 1 1, buildState p' 1 1]) |
@@ -69,9 +78,9 @@ distribute pc = PC.PP {
                                     let p = snd $ fst t,
                                     let q' = fst $ snd t,
                                     let p' = snd $ snd t,
-                                    q' `elem` PC.true (PC.outputOL pc) || p' `elem` PC.true (PC.outputOL pc),
-                                    q' `notElem` PC.false (PC.outputOL pc),     -- this is a deviation from the paper, is it not?
-                                    p' `notElem` PC.false (PC.outputOL pc),     -- this is a deviation from the paper, is it not?
+                                    q' `elem` PC.true oldOutput || p' `elem` PC.true oldOutput,
+                                    q' `notElem` PC.false oldOutput,     -- this is a deviation from the paper, is it not?
+                                    p' `notElem` PC.false oldOutput,     -- this is a deviation from the paper, is it not?
                                     i1 <- [0, 1],
                                     t1 <- [0, 1],
                                     i2 <- [0, 1],
@@ -82,9 +91,9 @@ distribute pc = PC.PP {
                                     let p = snd $ fst t,
                                     let q' = fst $ snd t,
                                     let p' = snd $ snd t,
-                                    q' `elem` PC.false (PC.outputOL pc) || p' `elem` PC.false (PC.outputOL pc),
-                                    q' `notElem` PC.true (PC.outputOL pc),      -- this is a deviation from the paper, is it not?
-                                    p' `notElem` PC.true (PC.outputOL pc),      -- this is a deviation from the paper, is it not?
+                                    q' `elem` PC.false oldOutput || p' `elem` PC.false oldOutput,
+                                    q' `notElem` PC.true oldOutput,      -- this is a deviation from the paper, is it not?
+                                    p' `notElem` PC.true oldOutput,      -- this is a deviation from the paper, is it not?
                                     i1 <- [0, 1],
                                     t1 <- [0, 1],
                                     i2 <- [0, 1],
@@ -117,6 +126,6 @@ distribute pc = PC.PP {
                                 t2 <- [0, 1]]
         transitions = filterTransitions certifyTransitions convinceTransitions dropTransitions noopTransitions
         output = PC.Output {
-            PC.true = [buildState q 1 token | q <- Set.toList (PC.states pc), token <- [0, 1]],
-            PC.false = [buildState q 0 token | q <- Set.toList (PC.states pc), token <- [0, 1]]
+            PC.true = [buildState (show q) 1 token | q <- Set.toList (PC.states pc), token <- [0, 1]],
+            PC.false = [buildState (show q) 0 token | q <- Set.toList (PC.states pc), token <- [0, 1]]
         }

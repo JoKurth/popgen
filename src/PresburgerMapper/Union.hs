@@ -76,12 +76,12 @@ extractCoefficientsFromPredicates (Right (Predicates.TP coefficients _)) = coeff
 
 
 constructDistributionTransition :: Int -> String -> Int -> [[[Int]]] -> (MultiSet.MultiSet String, MultiSet.MultiSet String)
-constructDistributionTransition variableNumber inputVar numberOfCoefficients coefficients = (inputTransition, outputTransition)
+constructDistributionTransition variableNumber inputVar numberOfCoefficients coefficients = (input, output)
     where
-        inputTransition = if numberOfCoefficients > 1
+        input = if numberOfCoefficients > 1
             then MultiSet.fromList $ flatten [[inputVar], [show (0*i) | i <- [1 .. numberOfCoefficients-1]]]
             else MultiSet.fromList [inputVar, show 0]
-        outputTransition = if numberOfCoefficients > 1
+        output = if numberOfCoefficients > 1
             then MultiSet.fromList $ flatten $ mapWithIndex (map . renameState) $ map (!! (variableNumber-1)) $ filter (\l -> length l > variableNumber-1) coefficients
             else MultiSet.fromList $ show 0 : flatten (map (!! (variableNumber-1)) $ filter (\l -> length l > variableNumber-1) $ mapWithIndex (map . map . renameState) coefficients)
 

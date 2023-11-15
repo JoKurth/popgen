@@ -20,14 +20,17 @@ getQFromTransition t = MultiSet.findMin $ fst t
 getPFromTransition t = MultiSet.findMax $ fst t
 
 
+renameTransitionsForStates :: (MultiSet.MultiSet String, MultiSet.MultiSet String) -> [Char]
 renameTransitionsForStates t = "{(" ++ show (fst t) ++ "," ++ show (snd t) ++ ")}" -- maybe we want to switch to a map for an easy and faster lookup
 
+buildStateName :: [Char] -> Int -> [Char]
 buildStateName q number = "(" ++ q ++ "," ++ show number ++ ")"
 
 data StateType = Q | P
     deriving Eq
 buildTStates state number transition = "(" ++ (if state == Q then getQFromTransition else getPFromTransition) transition ++ "," ++ show number ++ "," ++ renameTransitionsForStates transition ++ ")"
 
+buildIdentifiedTStates :: (MultiSet.MultiSet String, MultiSet.MultiSet String) -> Int -> [Char]
 buildIdentifiedTStates transition i
     | i == 1 = buildTStates Q 0 transition
     | i == l = buildSIdentifiedState (MultiSet.toList (snd transition) !! (l - 1))
@@ -41,7 +44,7 @@ buildSIdentifiedState state = buildStateName state 1
 -- | index = the index of the gate we are currently processing
 buildOutputFunction :: PC.BooleanCircuit String -> Int -> PC.BooleanCircuit String
 buildOutputFunction ([], edges) _ = ([], edges)
-buildOutputFunction ((PC.Input "0") : gates, edges) index = (PC.Input "0" : fst nextCircuit, snd nextCircuit)
+buildOutputFunction ((PC.Input "0") : gates, edges) index = (PC.Input "(0,1)" : fst nextCircuit, snd nextCircuit) -- TODO use something else to map Input 0 to
     where
         nextCircuit = buildOutputFunction (gates, edges) (index + 1)
 buildOutputFunction ((PC.Input x) : gates, edges) index = (PC.OR : fst nextCircuit ++ [PC.Input $ buildStateName x 1, PC.Input $ buildStateName x 0], (index, (baseNewIndex + 1, baseNewIndex + 2)) : snd nextCircuit)

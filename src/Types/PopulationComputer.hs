@@ -7,6 +7,7 @@ module Types.PopulationComputer (
     PopulationComputer(..),
     PopulationProtocol(..),
     intGateToStringGate,
+    stringGateToIntGate,
     isInputGate,
     evalGate
 ) where
@@ -74,9 +75,21 @@ intGateToStringGate ConstT = ConstT
 intGateToStringGate ConstF = ConstF
 intGateToStringGate (Input g) = Input $ show g
 
+stringGateToIntGate :: Gate String -> Gate Int
+stringGateToIntGate AND = AND
+stringGateToIntGate OR = OR
+stringGateToIntGate NOT = NOT
+stringGateToIntGate ConstT = ConstT
+stringGateToIntGate ConstF = ConstF
+stringGateToIntGate (Input g) = Input $ read g
+
+
 isInputGate :: Gate a -> Bool
 isInputGate (Input _) = True
+isInputGate ConstT = True           -- const gates are considered input gates
+isInputGate ConstF = True           -- const gates are considered input gates
 isInputGate _ = False
+
 
 -- | each Int encodes a boolean value, i.e. 0 encodes False, 1 encodes True all other values are undefined and lead to undefined behavior
 evalGate :: Gate a -> Int -> Int -> Int

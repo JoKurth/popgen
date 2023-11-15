@@ -15,7 +15,7 @@ import qualified Types.Predicates as Predicates (Predicate(..), BoolOp(..), NotO
 
 
 mapRemainderPredicate :: String -> Predicates.BasePredicate
-mapRemainderPredicate predicate = Left (Predicates.RP (map (: []) coefficients) (head constants) (last constants))
+mapRemainderPredicate predicate = Left (Predicates.RP (map ((: []) . (`mod` head constants)) coefficients) (head constants) (last constants))
     where
         coefficientRegEx = "\\[\\-?[0-9]+(,\\-?[0-9]+)*\\]"
         constantsRegEx = "[0-9]+;[0-9]+$"

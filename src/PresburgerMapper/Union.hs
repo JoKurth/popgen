@@ -83,7 +83,9 @@ constructDistributionTransition variableNumber inputVar numberOfCoefficients coe
             else MultiSet.fromList [inputVar, show 0]
         output = if numberOfCoefficients > 1
             then MultiSet.fromList $ flatten $ mapWithIndex (map . renameState) $ map (!! (variableNumber-1)) $ filter (\l -> length l > variableNumber-1) coefficients
-            else MultiSet.fromList $ show 0 : flatten (map (!! (variableNumber-1)) $ filter (\l -> length l > variableNumber-1) $ mapWithIndex (map . map . renameState) coefficients)
+            else MultiSet.fromList $ show 0 : if null outputState then [show 0] else outputState
+                where
+                    outputState = flatten (map (!! (variableNumber-1)) $ filter (\l -> length l > variableNumber-1) $ mapWithIndex (map . map . renameState) coefficients)
 
 calcDistributeTransitions :: Set.Set String -> [Predicates.BasePredicate] -> Set.Set (MultiSet.MultiSet String, MultiSet.MultiSet String)
 calcDistributeTransitions inputVariables predicates = Set.fromList $ mapWithIndex (\index numberOfCoefficients -> constructDistributionTransition index (Set.toList inputVariables !! (index-1)) numberOfCoefficients coefficients) numberOfCoefficientInputAgentsPerVariable -- we have to substract 1 from the index because mapWithIndex starts at 1

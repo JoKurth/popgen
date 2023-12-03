@@ -67,7 +67,7 @@ binarise pc = PC.PCB {
     where
         oldStates = Set.toList $ PC.states pc
         oldTransitions = Set.toList $ PC.delta pc
-        multiplicity q = maxFromList $ map (\(input, _) -> MultiSet.occur q input) oldTransitions
+        multiplicity q = maximum $ map (\(input, _) -> MultiSet.occur q input) oldTransitions
         states = [buildStateName q i | q <- oldStates,
                                        i <- [0 .. multiplicity q]] ++                       -- stack
                  [buildTStates Q i t | t <- oldTransitions,
@@ -77,13 +77,13 @@ binarise pc = PC.PCB {
                                                i <- [1 .. MultiSet.size (fst t)]]           -- execute
         stackTransitions = [(MultiSet.fromList [buildStateName q i, buildStateName q j], MultiSet.fromList [buildStateName q (i + j), buildStateName q 0]) |
                                 q <- oldStates,
-                                i <- [0 .. multiplicity q - 1],
-                                j <- [0 .. multiplicity q - 1],
+                                i <- [1 .. multiplicity q - 1],
+                                j <- [1 .. multiplicity q - 1],
                                 i + j <= multiplicity q] ++                                 -- stack
                            [(MultiSet.fromList [buildStateName q i, buildStateName q j], MultiSet.fromList [buildStateName q (multiplicity q), buildStateName q (i + j - multiplicity q)]) |
                                 q <- oldStates,
-                                i <- [0 .. multiplicity q - 1],
-                                j <- [0 .. multiplicity q - 1],
+                                i <- [1 .. multiplicity q - 1],
+                                j <- [1 .. multiplicity q - 1],
                                 i + j >= multiplicity q]                                    -- stack
         commitTransitions = [(MultiSet.fromList [buildStateName q i, buildStateName p j], MultiSet.fromList [buildTStates Q (i - numOfQ) t, buildStateName p (j - numOfP)]) |
                                 t <- oldTransitions,

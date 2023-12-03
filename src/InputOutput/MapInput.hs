@@ -18,7 +18,7 @@ mapRemainderPredicate :: String -> Predicates.BasePredicate
 mapRemainderPredicate predicate = Left (Predicates.RP (map ((: []) . (`mod` head constants)) coefficients) (head constants) (last constants))
     where
         coefficientRegEx = "\\[\\-?[0-9]+(,\\-?[0-9]+)*\\]"
-        constantsRegEx = "[0-9]+;[0-9]+$"
+        constantsRegEx = "[1-9]+;[0-9]+$"
         coefficients = read (predicate =~ coefficientRegEx :: String) :: [Int]
         constants = map (\x -> read x :: Int) $ splitOn ";" (predicate =~ constantsRegEx :: String)
 
@@ -26,7 +26,7 @@ mapThresholdPredicate :: String -> Predicates.BasePredicate
 mapThresholdPredicate predicate = Right (Predicates.TP (map (: []) coefficients) constant)
     where
         coefficientRegEx = "\\[\\-?[0-9]+(,\\-?[0-9]+)*\\]"
-        constantRegEx = "[0-9]+$"
+        constantRegEx = "\\-?[0-9]+$"
         coefficients = read (predicate =~ coefficientRegEx :: String) :: [Int]
         constant = read (predicate =~ constantRegEx :: String) :: Int
 
@@ -36,8 +36,8 @@ mapPredicate predicateString
     | predicateString =~ thresholdRegEx :: Bool = mapThresholdPredicate predicateString
     | otherwise = error "The input predicate does not match the format"
         where
-            remainderRegEx = "^\\[\\-?[0-9]+(,\\-?[0-9]+)*\\];[0-9]+;[0-9]+$"
-            thresholdRegEx = "^\\[\\-?[0-9]+(,\\-?[0-9]+)*\\];[0-9]+$"
+            remainderRegEx = "^\\[\\-?[0-9]+(,\\-?[0-9]+)*\\];[1-9]+;[0-9]+$"
+            thresholdRegEx = "^\\[\\-?[0-9]+(,\\-?[0-9]+)*\\];\\-?[0-9]+$"
 
 boolExprToPredicate :: BoolExpr String -> Predicates.Predicate
 boolExprToPredicate (BOr leftExpr rightExpr) = Predicates.NodeP (boolExprToPredicate leftExpr) Predicates.OR (boolExprToPredicate rightExpr)

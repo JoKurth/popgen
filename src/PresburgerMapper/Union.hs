@@ -20,7 +20,7 @@ import qualified Data.Bifunctor
 
 -- | The name of this function follows the naming in the paper
 bin :: Int -> MultiSet.MultiSet Int
-bin x = MultiSet.fromList [ signum x * 2^i | i <- intToBinary $ abs x]
+bin x = MultiSet.fromList [signum x * 2^i | i <- intToBinary $ abs x]
 
 -- Transformation
 
@@ -68,7 +68,7 @@ numberOfVariables (Left (Predicates.RP coefficients _ _)) = length coefficients
 numberOfVariables (Right (Predicates.TP coefficients _)) = length coefficients
 
 totalNumberOfVariables :: [Predicates.BasePredicate] -> Int
-totalNumberOfVariables = maxFromList . map numberOfVariables
+totalNumberOfVariables = maximum . map numberOfVariables
 
 extractCoefficientsFromPredicates :: Predicates.BasePredicate -> [[Int]]
 extractCoefficientsFromPredicates (Left (Predicates.RP coefficients _ _)) = coefficients
@@ -105,11 +105,11 @@ combineSubPCs pred pcs = PC.PCB{
         predList = predicateToPredicateList pred
         inputVariables = Set.fromList $ map (\i -> "x_" ++ show i) [1 .. totalNumberOfVariables predList] -- the input variables
         renamedStates = Set.unions $ mapWithIndex renameStates pcs
-        joinedTransitions =    mapWithIndex (\i pc -> renameStatesInTransitions i $ PC.delta pc) pcs -- subcomputer
+        joinedTransitions =   mapWithIndex (\i pc -> renameStatesInTransitions i $ PC.delta pc) pcs -- subcomputer
                             ++ [calcDistributeTransitions inputVariables predList]                   -- distribute
         coefficients = map extractCoefficientsFromPredicates predList
-        bar = map (map length) coefficients
-        numOfHelpers = MultiSet.map show $ MultiSet.insertMany 0 (max (maxFromList $ map maxFromList bar) 2 - 1) $ MultiSet.unions $ map PC.helpers pcs
+        numOfCoefficients = map (map length) coefficients
+        numOfHelpers = MultiSet.map show $ MultiSet.insertMany 0 (max (maximum $ map maximum numOfCoefficients) 2 - 1) $ MultiSet.unions $ map PC.helpers pcs
         outputFunction = buildUnionCircuit pred $ mapWithIndex renameGates circuits
             where
                 circuits = map PC.output pcs

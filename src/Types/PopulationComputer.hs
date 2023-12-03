@@ -20,7 +20,14 @@ data OutputValues = F | T | Undef
     deriving (Eq)
 
 data Gate a = AND | OR | NOT | ConstT | ConstF | Input a
-    deriving (Show)
+
+instance (Show a) => Show (Gate a) where
+    show AND = "AND"
+    show OR = "OR"
+    show NOT = "NOT"
+    show ConstT = "Const_True"
+    show ConstF = "Const_False"
+    show (Input a) = "Input_" ++ show a
 
 -------------(index of the gate that has these inputs, (in1, in2))
 type Edge = (Int, (Int, Int))

@@ -35,12 +35,17 @@ buildGateTransitionQState (PC.Input "0") _ _ _ = [falseState] -- the value of th
 buildGateTransitionQState (PC.Input q) _ _ b = [buildSuppState q (show b)]
 buildGateTransitionQState PC.ConstT _ _ _ = [trueState]
 buildGateTransitionQState PC.ConstF _ _ _ = [falseState]
-buildGateTransitionQState g index edges b = [buildGateState (gateToGateStateName g (findE index edges)) (show b) i j | i <- ["0", "1"], j <- ["0", "1"]]
+buildGateTransitionQState g index edges b = [buildGateState (gateToGateStateName g (findE index edges)) (show b) i j | i <- ["0", "1"], j <- ["0", "1"]] -- we could probably optimize a lot here
     where
         findE i [] = error "Error during creation of gate transitions: could not find given edge."
         findE i (e:edges)                                                                                                  -- inefficient
             | i == fst e = e
             | otherwise = findE i edges
+        inputs = case g of
+                    PC.AND -> if b == 0 then [("0", "0"), ("0", "1"), ("1", "0")] else [("1", "1")]
+                    PC.OR -> if b == 0 then [("0", "0")] else [("0", "1"), ("1", "0"), ("1", "1")]
+                    PC.NOT -> if b == 0 then [("1", "0")] else [("0", "0")]
+
 
 
 sortEdges :: PC.Edge -> PC.Edge -> Ordering
@@ -56,13 +61,15 @@ focalise pc = PC.PCL {
     PC.delta = Set.fromList transitions,
     PC.input = Set.map (`buildOrigState` "-") (PC.input pc),
     PC.outputOL = outputFunction,
-    PC.helpers = MultiSet.unions [MultiSet.map (`buildOrigState` "-") $ PC.helpers pc, MultiSet.fromList [buildSuppState q "0" | q <- oldStates],
+    PC.helpers = MultiSet.unions [MultiSet.map (`buildOrigState` "-") $ PC.helpers pc,
+                                    MultiSet.fromList [buildSuppState q "0" | q <- oldStates],
                                     MultiSet.fromList [buildGateState (gateToGateStateName g e) "undef" "undef" "undef" | e <- edges, let g = gates !! fst e],
+                                    MultiSet.fromList [trueState, falseState],
                                     MultiSet.fromList ["0"]]
 }
     where
         oldStates = Set.toList $ PC.states pc
-        gates = fst $ PC.output pc
+        gates = fst $ {- booleanCircuitToDot $ -} PC.output pc
         edges = snd $ PC.output pc
         boolGates = filter (not . PC.isInputGate) gates
         sortedEdges = sortBy sortEdges edges
@@ -93,7 +100,11 @@ focalise pc = PC.PCL {
                                 e <- edges, let g = gates !! fst e,
                                 let e2 = gates !! snd (snd e),
                                 i <- [0, 1],
-                                b <- [0, 1],
+                                b <- case e2 of
+                                        (PC.Input "0") -> [0]
+                                        PC.ConstT -> [1]
+                                        PC.ConstF -> [0]
+                                        _ -> [0, 1],
                                 q <- buildGateTransitionQState e2 (snd $ snd e) edges b]               -- gate
         resetTransitions = [(MultiSet.fromList [show i, buildSuppState qi b], MultiSet.fromList [show (i + 1), buildSuppState qi "0"]) |
                                 i <- [0 .. length oldStates - 1],
@@ -107,7 +118,7 @@ focalise pc = PC.PCL {
                                 b3 <- boolVals]             -- reset
         initResetTransitions = [(MultiSet.fromList [buildOrigState q "+", i], MultiSet.fromList [buildOrigState q "-", "0"]) |
                                     q <- oldStates, i <- qReset] ++             -- init-reset
-                                [(MultiSet.fromList [buildOrigState q "!", i], MultiSet.fromList [buildOrigState q "1", show $ min (read i) (length oldStates)]) |
+                                [(MultiSet.fromList [buildSuppState q "!", i], MultiSet.fromList [buildOrigState q "1", show $ min (read i) (length oldStates)]) |
                                     q <- oldStates, i <- qReset] ++             -- init-reset
                                 [(MultiSet.fromList [i, j], MultiSet.fromList ["0", buildOrigState qh "-"]) |
                                     i <- qReset, j <- qReset]              -- init-reset
@@ -142,17 +153,3 @@ focalise pc = PC.PCL {
             where
                 outputEdge = last edges
                 outputGate = gateToGateStateName (gates !! fst outputEdge) outputEdge
-        -- for \exists q0 and \exists q1 we output false eventhough it is specified as undefined
-        -- outputFunction = ([PC.Input 0, PC.Input q01, PC.Input q02, PC.Input q03, PC.Input q04, PC.OR, PC.OR, PC.OR, PC.NOT, PC.Input q11, PC.Input q12, PC.Input q13,PC.Input q14, PC.OR, PC.OR, PC.OR, PC.AND],
-        --                   [(5, (1, 2)), (6, (5, 3)), (7, (6, 4)), (8, (7, 0)), (13, (9, 10)), (14, (13, 11)), (15, (14, 12)), (16, (8, 15))])
-        --                         where
-        --                             outputEdge = last edges
-        --                             outputGate = gateToGateStateName (gates !! fst outputEdge) outputEdge
-        --                             q01 = buildGateState outputGate 0 0 0
-        --                             q02 = buildGateState outputGate 0 0 1
-        --                             q03 = buildGateState outputGate 0 1 0
-        --                             q04 = buildGateState outputGate 0 1 1
-        --                             q11 = buildGateState outputGate 1 0 0
-        --                             q12 = buildGateState outputGate 1 0 1
-        --                             q13 = buildGateState outputGate 1 1 0
-        --                             q14 = buildGateState outputGate 1 1 1

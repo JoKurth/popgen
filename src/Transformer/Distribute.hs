@@ -8,6 +8,7 @@ module Transformer.Distribute (
 import Helper.List
 import qualified Types.PopulationComputer as PC (PopulationComputer(..), PopulationProtocol(..), OutputLists (..))
 
+import Data.List (sort)
 import qualified Data.MultiSet as MultiSet
 import qualified Data.Set as Set
 import qualified Data.HashSet as HashSet
@@ -46,7 +47,7 @@ buildTransitionsForBuilding oldStates oldTransitions = [((q, p), (q', p')) |
                                         Nothing -> (q, p)
 
 
-filterTransitions :: [(MultiSet.MultiSet String, MultiSet.MultiSet String)] -> [(MultiSet.MultiSet String, MultiSet.MultiSet String)] -> [(MultiSet.MultiSet String, MultiSet.MultiSet String)] -> [(MultiSet.MultiSet String, MultiSet.MultiSet String)] -> [(MultiSet.MultiSet String, MultiSet.MultiSet String)]
+-- filterTransitions :: [(MultiSet.MultiSet String, MultiSet.MultiSet String)] -> [(MultiSet.MultiSet String, MultiSet.MultiSet String)] -> [(MultiSet.MultiSet String, MultiSet.MultiSet String)] -> [(MultiSet.MultiSet String, MultiSet.MultiSet String)] -> [(MultiSet.MultiSet String, MultiSet.MultiSet String)]
 filterTransitions certify convince drop noop = certify ++ filterList hsetCert convince ++ filterList hsetCert drop ++ filterList hsetAll noop
     where
         hsetCert = HashSet.fromList $ map (show . fst) certify
@@ -54,11 +55,11 @@ filterTransitions certify convince drop noop = certify ++ filterList hsetCert co
         filterList hset = filter (\x -> not $ HashSet.member (show $ fst x) hset)
 
 
-distribute :: PC.PopulationComputer Int-> PC.PopulationProtocol String
+distribute :: PC.PopulationComputer Int-> PC.PopulationProtocol Int
 distribute pc = PC.PP {
-    PC.statesPP = states,
+    PC.statesPP = [1 .. length states],
     PC.deltaPP = transitions,
-    PC.inputPP = Set.map (\q -> buildState (show q) 0 0) (PC.input pc),
+    PC.inputPP = Set.map (\q -> buildState' (show q) 0 0) (PC.input pc),
     PC.outputPP = output
 }
     where
@@ -71,8 +72,10 @@ distribute pc = PC.PP {
                     PC.false = map show false
                 }
         states = [buildState q opinion token | q <- oldStates, opinion <- [0, 1], token <- [0, 1]]
+        stateMapper = HashMap.fromList $ mapWithIndex (\i x -> (x, i)) $ sort states
+        buildState' q o t = stateMapper HashMap.! buildState q o t
         transitionsForBuilding = buildTransitionsForBuilding oldStates oldTransitions
-        certifyTransitions = [(MultiSet.fromList [buildState q i1 t1, buildState p i2 t2], MultiSet.fromList [buildState q' 1 1, buildState p' 1 1]) |
+        certifyTransitions = [(MultiSet.fromList [buildState' q i1 t1, buildState' p i2 t2], MultiSet.fromList [buildState' q' 1 1, buildState' p' 1 1]) |
                                     t <- transitionsForBuilding,
                                     let q = fst $ fst t,
                                     let p = snd $ fst t,
@@ -85,7 +88,7 @@ distribute pc = PC.PP {
                                     t1 <- [0, 1],
                                     i2 <- [0, 1],
                                     t2 <- [0, 1]] ++
-                              [(MultiSet.fromList [buildState q i1 t1, buildState p i2 t2], MultiSet.fromList [buildState q' 0 1, buildState p' 0 1]) |
+                              [(MultiSet.fromList [buildState' q i1 t1, buildState' p i2 t2], MultiSet.fromList [buildState' q' 0 1, buildState' p' 0 1]) |
                                     t <- transitionsForBuilding,
                                     let q = fst $ fst t,
                                     let p = snd $ fst t,
@@ -98,21 +101,21 @@ distribute pc = PC.PP {
                                     t1 <- [0, 1],
                                     i2 <- [0, 1],
                                     t2 <- [0, 1]]
-        convinceTransitions = [(MultiSet.fromList [buildState q i 1, buildState p (1 - i) 0], MultiSet.fromList [buildState q' i 0, buildState p' i 0]) |
+        convinceTransitions = [(MultiSet.fromList [buildState' q i 1, buildState' p (1 - i) 0], MultiSet.fromList [buildState' q' i 0, buildState' p' i 0]) |
                                     t <- transitionsForBuilding,
                                     let q = fst $ fst t,
                                     let p = snd $ fst t,
                                     let q' = fst $ snd t,
                                     let p' = snd $ snd t,
                                     i <- [0, 1]]
-        dropTransitions = [(MultiSet.fromList [buildState q i 1, buildState p (1 - i) 1], MultiSet.fromList [buildState q' i 0, buildState p' (1 - i) 0]) |
+        dropTransitions = [(MultiSet.fromList [buildState' q i 1, buildState' p (1 - i) 1], MultiSet.fromList [buildState' q' i 0, buildState' p' (1 - i) 0]) |
                                 t <- transitionsForBuilding,
                                 let q = fst $ fst t,
                                 let p = snd $ fst t,
                                 let q' = fst $ snd t,
                                 let p' = snd $ snd t,
                                 i <- [0, 1]]
-        noopTransitions = [(MultiSet.fromList [buildState q i1 t1, buildState p i2 t2], MultiSet.fromList [buildState q' i1 t1, buildState p' i2 t2]) |
+        noopTransitions = [(MultiSet.fromList [buildState' q i1 t1, buildState' p i2 t2], MultiSet.fromList [buildState' q' i1 t1, buildState' p' i2 t2]) |
                                 t <- transitionsForBuilding,
                                 let q = fst $ fst t,
                                 let p = snd $ fst t,
@@ -126,6 +129,6 @@ distribute pc = PC.PP {
                                 t2 <- [0, 1]]
         transitions = filterTransitions certifyTransitions convinceTransitions dropTransitions noopTransitions
         output = PC.Output {
-            PC.true = [buildState (show q) 1 token | q <- Set.toList (PC.states pc), token <- [0, 1]],
-            PC.false = [buildState (show q) 0 token | q <- Set.toList (PC.states pc), token <- [0, 1]]
+            PC.true = [buildState' (show q) 1 token | q <- Set.toList (PC.states pc), token <- [0, 1]],
+            PC.false = [buildState' (show q) 0 token | q <- Set.toList (PC.states pc), token <- [0, 1]]
         }

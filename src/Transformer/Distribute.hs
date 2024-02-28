@@ -14,9 +14,6 @@ import qualified Data.Set as Set
 import qualified Data.HashSet as HashSet
 import qualified Data.HashMap.Strict as HashMap
 
-import Helper.Debug
-import Debug.Trace (traceId)
-
 
 -- das ist sehr langsam. lief jetzt über 1,5 stunden und war immer noch nicht fertig.
 -- optimierungen: keine konvertierung in sets. stattdessen die listen zurückgeben. durch die umbenennung sollten doppelte dann auch sowieso wegfallen
@@ -74,11 +71,11 @@ distribute pc = PC.PP {
                     PC.true = map show true,
                     PC.false = map show false
                 }
-        states = traceLength "length states:" [buildState q opinion token | q <- oldStates, opinion <- [0, 1], token <- [0, 1]]
+        states = [buildState q opinion token | q <- oldStates, opinion <- [0, 1], token <- [0, 1]]
         stateMapper = HashMap.fromList $ mapWithIndex (\i x -> (x, i)) $ sort states
         buildState' q o t = stateMapper HashMap.! buildState q o t
-        transitionsForBuilding = traceLength "length transitionsForBuilding:" $ buildTransitionsForBuilding oldStates oldTransitions
-        certifyTransitions = traceLength "length certifyTransitions:" $ [(MultiSet.fromList [buildState' q i1 t1, buildState' p i2 t2], MultiSet.fromList [buildState' q' 1 1, buildState' p' 1 1]) |
+        transitionsForBuilding = buildTransitionsForBuilding oldStates oldTransitions
+        certifyTransitions = [(MultiSet.fromList [buildState' q i1 t1, buildState' p i2 t2], MultiSet.fromList [buildState' q' 1 1, buildState' p' 1 1]) |
                                     t <- transitionsForBuilding,
                                     let q = fst $ fst t,
                                     let p = snd $ fst t,
@@ -105,7 +102,7 @@ distribute pc = PC.PP {
                                     i2 <- [0, 1],
                                     t2 <- [0, 1]]
         hsetCert = HashSet.fromList $ map ({- show . -} MultiSet.toAscList . fst) certifyTransitions
-        convinceTransitions = traceLength "length convinceTransitions:" $ [transition |
+        convinceTransitions = [transition |
                                     t <- transitionsForBuilding,
                                     let q = fst $ fst t,
                                     let p = snd $ fst t,
@@ -114,7 +111,7 @@ distribute pc = PC.PP {
                                     i <- [0, 1],
                                     let transition = (MultiSet.fromList [buildState' q i 1, buildState' p (1 - i) 0], MultiSet.fromList [buildState' q' i 0, buildState' p' i 0]),
                                     not $ HashSet.member ({- show $ -} MultiSet.toAscList $ fst transition) hsetCert]
-        dropTransitions = traceLength "length dropTransitions:" $ [transition |
+        dropTransitions = [transition |
                                 t <- transitionsForBuilding,
                                 let q = fst $ fst t,
                                 let p = snd $ fst t,
@@ -125,7 +122,7 @@ distribute pc = PC.PP {
                                 not $ HashSet.member ({- show $ -} MultiSet.toAscList $ fst transition) hsetCert]
         hsetConv = HashSet.fromList $ map ({- show . -} MultiSet.toAscList . fst) convinceTransitions
         hsetDrop = HashSet.fromList $ map ({- show . -} MultiSet.toAscList . fst) dropTransitions
-        noopTransitions = traceLength "length noopTransitions:" $ [transition |
+        noopTransitions = [transition |
                                 t <- transitionsForBuilding,
                                 let q = fst $ fst t,
                                 let p = snd $ fst t,
@@ -140,8 +137,8 @@ distribute pc = PC.PP {
                                 let transition = (MultiSet.fromList [buildState' q i1 t1, buildState' p i2 t2], MultiSet.fromList [buildState' q' i1 t1, buildState' p' i2 t2]),
                                 not $ HashSet.member ({- show $ -} MultiSet.toAscList $ fst transition) hsetCert,
                                 not $ HashSet.member ({- show $ -} MultiSet.toAscList $ fst transition) hsetConv]
-        transitions = traceLength "length totalTransitions:" $ {-filterTransitions-} certifyTransitions ++ convinceTransitions ++ dropTransitions ++ filter (\x -> not $ HashSet.member ({- show $ -} MultiSet.toAscList $ fst x) hsetDrop) noopTransitions
+        transitions = {-filterTransitions-} certifyTransitions ++ convinceTransitions ++ dropTransitions ++ filter (\x -> not $ HashSet.member ({- show $ -} MultiSet.toAscList $ fst x) hsetDrop) noopTransitions
         output = PC.Output {
-            PC.true = traceLength "length true output:" [buildState' (show q) 1 token | q <- Set.toList (PC.states pc), token <- [0, 1]],
-            PC.false = traceLength "length false output:" [buildState' (show q) 0 token | q <- Set.toList (PC.states pc), token <- [0, 1]]
+            PC.true = [buildState' (show q) 1 token | q <- Set.toList (PC.states pc), token <- [0, 1]],
+            PC.false = [buildState' (show q) 0 token | q <- Set.toList (PC.states pc), token <- [0, 1]]
         }

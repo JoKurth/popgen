@@ -134,13 +134,13 @@ binarise pc = PC.PCB {
                                 let s = MultiSet.toList (snd t),
                                 i <- [1 .. length s - 1],
                                 i > MultiSet.occur p (fst t)]                               -- execute
-        transitions = filter (not . containsSameR) stackTransitions ++
+        transitions = filter (not . containsCommitTs) stackTransitions ++
                       commitTransitions ++
-                      filter (not . containsSameR) transferTransitions ++
-                      filter (not . containsSameR) executeTransitions
+                      filter (not . containsCommitTs) transferTransitions ++
+                      filter (not . containsCommitTs) executeTransitions
             where
                 -- this is a very inefficient way to do this. maybe we have to optimize it
-                containsSameR = (`containsSameRHelper` commitTransitions)
-                containsSameRHelper :: (MultiSet.MultiSet String, MultiSet.MultiSet String) -> [(MultiSet.MultiSet String, MultiSet.MultiSet String)] -> Bool
-                containsSameRHelper _ [] = False
-                containsSameRHelper t (x:xs) = (fst t == fst x) || containsSameRHelper t xs
+                containsCommitTs = (`containsSameHelper` commitTransitions)
+                containsSameHelper :: (MultiSet.MultiSet String, MultiSet.MultiSet String) -> [(MultiSet.MultiSet String, MultiSet.MultiSet String)] -> Bool
+                containsSameHelper _ [] = False
+                containsSameHelper t (x:xs) = (fst t == fst x) || containsSameHelper t xs

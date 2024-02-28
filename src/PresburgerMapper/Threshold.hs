@@ -26,10 +26,10 @@ constructThresholdPC (Predicates.TP coefficients c) s = PC.PCB {         -- s ha
     where
         d = 4 + max (1 + ceilBinLog c) (ceilBinLog $ s * maximum (map abs $ flatten coefficients))
         stateList = 0 : [2^i | i <- [0, 1 .. d]] ++ [-2^i | i <- [0, 1 .. d]]
-        transitions =    [(MultiSet.fromList [2^i, 2^i], MultiSet.fromList [0, 2^(i+1)]) | i <- [0 .. d-1]]                            -- combine
-                      ++ [(MultiSet.fromList [negate $ 2^i, negate $ 2^i], MultiSet.fromList [0, negate $ 2^(i+1)]) | i <- [0 .. d-1]] -- combine
-                      ++ [(MultiSet.fromList [negate $ 2^i, 2^i], MultiSet.fromList [0, 0]) | i <- [0 .. d-1]]                         -- cancel
-                      ++ [(MultiSet.fromList [negate $ 2^d, 2^d], MultiSet.fromList [0, 0])]                                           -- cancel
-                      ++ [(MultiSet.fromList [2^d, negate $ 2^(d-1)], MultiSet.fromList [0, 2^(d-1)])]                                 -- cancel 2nd highest
-                      ++ [(MultiSet.fromList [negate $ 2^d, 2^(d-1)], MultiSet.fromList [0, negate $ 2^(d-1)])]                        -- cancel 2nd highest
+        transitions =    [(MultiSet.fromList [2^i, 2^i], MultiSet.fromList [0, 2^(i+1)]) | i <- [0 .. d-1]]                             -- combine
+                      ++ [(MultiSet.fromList [negate $ 2^i, negate $ 2^i], MultiSet.fromList [0, negate $ 2^(i+1)]) | i <- [0 .. d-1]]  -- combine
+                      ++ [(MultiSet.fromList [negate $ 2^i, 2^i], MultiSet.fromList [0, 0]) | i <- [0 .. d-1]]                          -- cancel
+                      ++ [(MultiSet.fromList [negate $ 2^d, 2^d], MultiSet.fromList [0, 0])]                                            -- cancel
+                      ++ [(MultiSet.fromList [2^d, negate $ 2^(d-1)], MultiSet.fromList [0, 2^(d-1)])]                                  -- cancel 2nd highest
+                      ++ [(MultiSet.fromList [negate $ 2^d, 2^(d-1)], MultiSet.fromList [0, negate $ 2^(d-1)])]                         -- cancel 2nd highest
         outputFunction = buildThresholdCircuit c d

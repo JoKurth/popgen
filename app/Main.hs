@@ -1,3 +1,6 @@
+-- we do not have to initialize any fields in the else branch in line 140 because if this branch is selected, the no field is ever selected
+{-# OPTIONS_GHC -Wno-missing-fields #-}
+
 module Main where
 
 import qualified Types.PopulationComputer as PC (OutputValues(..), PopulationComputer(..), PopulationProtocol(..), OutputLists (..))
@@ -22,6 +25,8 @@ import System.IO (openFile, IOMode (WriteMode), hClose, hPutStr, hPutStrLn, hPri
 
 main :: IO ()
 main = do
+    -- user input
+
     putStrLn "Please enter the predicate you want to transform:"
     putStrLn "(The predicate must be in the following format:"
     putStrLn "    - Modulo predicates: [a1,..,as];m;c"
@@ -75,11 +80,11 @@ main = do
     putStrLn ""
     putStrLn "Output: "
 
+    -- construction
+
     let predicate = stringToPredicate predicateString
-    -- putStrLn "predicate done"
 
     let doublePhi = doublePredicate predicate
-    -- putStrLn "double done" -- ++ show doublePhi
 
     let initPC = constructPC doublePhi
     putStrLn "  initial population computer..."
@@ -97,14 +102,6 @@ main = do
     putStrLn "  Binarise..."
     when (perfAnalysis == "y") (putStrLn $ "    number of states: " ++ show (length $ PC.states binarisedPC))
     when (perfAnalysis == "y") (putStrLn $ "    number of transitions: " ++ show (length $ PC.delta binarisedPC))
-    -- putStrLn $ "binarise " ++ popCompOverview binarisedPC
-    -- putStr "-----------------------------------------------------\nstates:\n"
-    -- print $ PC.states binarisedPC
-    -- putStr "\nOutput:\n"
-    -- print $ PC.output binarisedPC
-    -- putStrLn "----------------------------------------------------"
-    -- print $ stringPcToIntPc binarisedPC
-    -- print binarisedPC
 
     putStrLn ""
     let focalisedPC = focalise binarisedPC
@@ -113,52 +110,20 @@ main = do
     when (perfAnalysis == "y") (putStrLn $ "    number of transitions: " ++ show (length $ PC.delta focalisedPC))
     print $ length $ PC.helpers focalisedPC
     print $ length $ PC.helpers $ focalise $ binarise $ preprocess initPC
-    -- putStrLn $ "focalise " ++ popCompOverview focalisedPC
-    -- putStrLn $ popCompOverview $ stringPcToIntPc focalisedPC
-    -- print $ stringPcToIntPc focalisedPC
 
     putStrLn ""
     let autarkifiedPC = autarkify focalisedPC
-    -- let autarkifiedIntPc = stringPcToIntPc autarkifiedPC
     putStrLn "  Autarkify..."
     when (perfAnalysis == "y") (putStrLn $ "    number of states: " ++ show (length $ PC.states autarkifiedPC))
     when (perfAnalysis == "y") (putStrLn $ "    number of transitions: " ++ show (length $ PC.delta autarkifiedPC))
-    -- putStrLn "autarkify"
-    -- putStrLn $ "autarkify " ++ popCompOverview autarkifiedPC
-    -- putStrLn $ popCompOverview autarkifiedIntPc
-    -- print autarkifiedIntPc
-    -- let outputStr = populationComputerToPopSim autarkifiedPC Nothing
-    -- print $ length $ PC.states autarkifiedPC
-    -- print $ length $ PC.delta autarkifiedPC
-    -- putStrLn $ "number of states: " ++ show (length $ PC.states autarkifiedPC)
-    -- putStrLn $ "number of transitions: " ++ show (length $ PC.delta autarkifiedPC)
 
     when (perfDistr == "y") (putStrLn "")
-    let distributedPC = if perfDistr == "y" then distribute $ stringPcToIntPc autarkifiedPC else PC.PP{}
+    let distributedPC = if perfDistr == "y" then distribute $ stringPcToIntPc autarkifiedPC else PC.PP{} -- we do not have to initialize any fields because if this branch is selected, the no field is ever selected
     when (perfDistr == "y") (putStrLn "  Distribute...")
     when (perfDistr == "y" && perfAnalysis == "y") (putStrLn $ "    number of states: " ++ show (length $ PC.statesPP distributedPC))
     when (perfDistr == "y" && perfAnalysis == "y") (putStrLn $ "    number of transitions: " ++ show (length $ PC.deltaPP distributedPC))
-    -- putStrLn "distribute"
-    -- print $ length $ PC.statesPP distributedPC
-    -- print $ length $ PC.deltaPP distributedPC
-    -- putStrLn $ "number of states: " ++ show (length $ PC.statesPP distributedPC)
-    -- putStrLn $ "number of transitions: " ++ show (length $ PC.deltaPP distributedPC)
 
-    -- let outputStr = populationProtocolToPopSim distributedPC Nothing
-    -- print $ length outputStr
-
-    -- putStrLn "done computing"
-
-    -- when (length (fst3 outputStr) > 0) $
-    --     writeFile "fooTestBlub.txt" $ fst3 outputStr
-
-    -- putStrLn ""
-    -- putStrLn "--------------------------------------"
-    -- putStrLn ""
-
-    -- print $ constructRemainderPC (RP [8, 4, 1] 11 4)
-    -- print $ constructThresholdPC (TP [-2, 1] 5) 1
-    -- print $ constructPC (NodeP (Leaf (Left (RP [[8], [5]] 11 4))) OR (Leaf (Right (TP [[negate 2], [1]] 5))))
+    -- output
 
     putStrLn ""
 
@@ -175,7 +140,3 @@ main = do
     hClose outputFile
 
     putStrLn $ "Succesfully written file to path `" ++ filePath ++ "`"
-
--- we also have to get a path to a destination file for our output (or print it to the command line which is a bit unfriendly; or add both options)
-
--- possible extension: direct link to popsim

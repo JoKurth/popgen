@@ -45,7 +45,6 @@ type Q a = Set.Set a
 type C a = MultiSet.MultiSet a
 type Delta a = Set.Set (C a, C a)
 type I a = Q a
--- type O a = BooleanCircuit a | OutputLists a
 type H a = MultiSet.MultiSet a
 
 data PopulationComputer a = PCB {
@@ -62,7 +61,6 @@ data PopulationComputer a = PCB {
     helpers :: H a
 }
     deriving (Show)
--- type PopulationComputer a = (Q a, Delta a, I a, O a, H a) -- vllt als record
 
 data PopulationProtocol a = PP {
     statesPP :: [a],
@@ -71,7 +69,6 @@ data PopulationProtocol a = PP {
     outputPP :: OutputLists a
 }
     deriving (Show)
--- type PopulationProtocol = (Q a, Delta a, I a, O a)
 
 
 intGateToStringGate :: Gate Int -> Gate String

@@ -21,7 +21,7 @@ getPFromTransition t = MultiSet.findMax $ fst t
 
 
 renameTransitionsForStates :: (MultiSet.MultiSet String, MultiSet.MultiSet String) -> [Char]
-renameTransitionsForStates t = "{(" ++ show (fst t) ++ "," ++ show (snd t) ++ ")}" -- maybe we want to switch to a map for an easy and faster lookup
+renameTransitionsForStates t = "{(" ++ show (fst t) ++ "," ++ show (snd t) ++ ")}"
 
 buildStateName :: [Char] -> Int -> [Char]
 buildStateName q number = "(" ++ q ++ "," ++ show number ++ ")"
@@ -36,7 +36,7 @@ buildIdentifiedTStates transition i
     | i == l = buildSIdentifiedState (MultiSet.toList (snd transition) !! (l - 1))
     | otherwise = "(" ++ renameTransitionsForStates transition ++ "," ++ show i ++ ")"
         where
-            l = MultiSet.size (snd transition)       -- TODO maybe we have to store this and the enumeration of s of each transition in an extra data structure or use toAscList to ensure a deterministic and consistent sorting in the enumerations
+            l = MultiSet.size (snd transition)
 
 buildSIdentifiedState state = buildStateName state 1
 
@@ -44,7 +44,7 @@ buildSIdentifiedState state = buildStateName state 1
 -- | index = the index of the gate we are currently processing
 buildOutputFunction :: PC.BooleanCircuit String -> Int -> PC.BooleanCircuit String
 buildOutputFunction ([], edges) _ = ([], edges)
-buildOutputFunction ((PC.Input "0") : gates, edges) index = (PC.Input "(0,1)" : fst nextCircuit, snd nextCircuit) -- TODO use something else to map Input 0 to
+buildOutputFunction ((PC.Input "0") : gates, edges) index = (PC.Input "(0,1)" : fst nextCircuit, snd nextCircuit)
     where
         nextCircuit = buildOutputFunction (gates, edges) (index + 1)
 buildOutputFunction ((PC.Input x) : gates, edges) index = (PC.OR : fst nextCircuit ++ [PC.Input $ buildStateName x 1, PC.Input $ buildStateName x 0], (index, (baseNewIndex + 1, baseNewIndex + 2)) : snd nextCircuit)
@@ -139,7 +139,6 @@ binarise pc = PC.PCB {
                       filter (not . containsCommitTs) transferTransitions ++
                       filter (not . containsCommitTs) executeTransitions
             where
-                -- this is a very inefficient way to do this. maybe we have to optimize it
                 containsCommitTs = (`containsSameHelper` commitTransitions)
                 containsSameHelper :: (MultiSet.MultiSet String, MultiSet.MultiSet String) -> [(MultiSet.MultiSet String, MultiSet.MultiSet String)] -> Bool
                 containsSameHelper _ [] = False

@@ -15,14 +15,6 @@ import qualified Data.HashSet as HashSet
 import qualified Data.HashMap.Strict as HashMap
 
 
--- das ist sehr langsam. lief jetzt über 1,5 stunden und war immer noch nicht fertig.
--- optimierungen: keine konvertierung in sets. stattdessen die listen zurückgeben. durch die umbenennung sollten doppelte dann auch sowieso wegfallen
---                das filtern umschreiben (die variante mit den hashmaps und dann alle auf einmal filtern) => bringt das runter von > 1,5 std auf 2 min 10 bis 20 sek
-
--- wie gehts weiter: memory-usage einsparen. nach jeder (erfolgreichen) optimierung commiten (jetzt auch) und kurz notieren, dass es besser läuft (screenshot)
--- potentielle weitere optimierung: strictness -> googlen
-
-
 getQFromTransition t = MultiSet.findMin $ fst t    -- todo auslagern
 getPFromTransition t = MultiSet.findMax $ fst t
 getQ'FromTransition t = MultiSet.findMin $ snd t    -- todo auslagern
@@ -40,19 +32,11 @@ buildTransitionsForBuilding oldStates oldTransitions = [((q, p), (q', p')) |
                                                             let q' = fst t,
                                                             let p' = snd t]
     where
-        hmap = HashMap.fromList $ map (\t -> (show $ fst t, t)) oldTransitions      -- maybe we have to make things strict here
+        hmap = HashMap.fromList $ map (\t -> (show $ fst t, t)) oldTransitions
         getTransitionWithQAndP :: String -> String -> (String, String)
         getTransitionWithQAndP q p = case HashMap.lookup (show $ MultiSet.fromList [q, p]) hmap of
                                         Just t -> (getQ'FromTransition t, getP'FromTransition t)
                                         Nothing -> (q, p)
-
-
--- filterTransitions :: [(MultiSet.MultiSet String, MultiSet.MultiSet String)] -> [(MultiSet.MultiSet String, MultiSet.MultiSet String)] -> [(MultiSet.MultiSet String, MultiSet.MultiSet String)] -> [(MultiSet.MultiSet String, MultiSet.MultiSet String)] -> [(MultiSet.MultiSet String, MultiSet.MultiSet String)]
--- filterTransitions certify convince drop noop = certify ++ filterList hsetCert convince ++ filterList hsetCert drop ++ filterList hsetAll noop
---     where
---         hsetCert = HashSet.fromList $ map (show . fst) certify
---         hsetAll = HashSet.union hsetCert $ HashSet.fromList $ map (show . fst) $ convince ++ drop
---         filterList hset = filter (\x -> not $ HashSet.member (show $ fst x) hset)
 
 
 distribute :: PC.PopulationComputer Int-> PC.PopulationProtocol Int
@@ -82,8 +66,8 @@ distribute pc = PC.PP {
                                     let q' = fst $ snd t,
                                     let p' = snd $ snd t,
                                     q' `elem` PC.true oldOutput || p' `elem` PC.true oldOutput,
-                                    q' `notElem` PC.false oldOutput,     -- this is a deviation from the paper, is it not?
-                                    p' `notElem` PC.false oldOutput,     -- this is a deviation from the paper, is it not?
+                                    q' `notElem` PC.false oldOutput,
+                                    p' `notElem` PC.false oldOutput,
                                     i1 <- [0, 1],
                                     t1 <- [0, 1],
                                     i2 <- [0, 1],
@@ -95,13 +79,13 @@ distribute pc = PC.PP {
                                     let q' = fst $ snd t,
                                     let p' = snd $ snd t,
                                     q' `elem` PC.false oldOutput || p' `elem` PC.false oldOutput,
-                                    q' `notElem` PC.true oldOutput,      -- this is a deviation from the paper, is it not?
-                                    p' `notElem` PC.true oldOutput,      -- this is a deviation from the paper, is it not?
+                                    q' `notElem` PC.true oldOutput,
+                                    p' `notElem` PC.true oldOutput,
                                     i1 <- [0, 1],
                                     t1 <- [0, 1],
                                     i2 <- [0, 1],
                                     t2 <- [0, 1]]
-        hsetCert = HashSet.fromList $ map ({- show . -} MultiSet.toAscList . fst) certifyTransitions
+        hsetCert = HashSet.fromList $ map (MultiSet.toAscList . fst) certifyTransitions
         convinceTransitions = [transition |
                                     t <- transitionsForBuilding,
                                     let q = fst $ fst t,
@@ -110,7 +94,7 @@ distribute pc = PC.PP {
                                     let p' = snd $ snd t,
                                     i <- [0, 1],
                                     let transition = (MultiSet.fromList [buildState' q i 1, buildState' p (1 - i) 0], MultiSet.fromList [buildState' q' i 0, buildState' p' i 0]),
-                                    not $ HashSet.member ({- show $ -} MultiSet.toAscList $ fst transition) hsetCert]
+                                    not $ HashSet.member (MultiSet.toAscList $ fst transition) hsetCert]
         dropTransitions = [transition |
                                 t <- transitionsForBuilding,
                                 let q = fst $ fst t,
@@ -119,9 +103,9 @@ distribute pc = PC.PP {
                                 let p' = snd $ snd t,
                                 i <- [0, 1],
                                 let transition = (MultiSet.fromList [buildState' q i 1, buildState' p (1 - i) 1], MultiSet.fromList [buildState' q' i 0, buildState' p' (1 - i) 0]),
-                                not $ HashSet.member ({- show $ -} MultiSet.toAscList $ fst transition) hsetCert]
-        hsetConv = HashSet.fromList $ map ({- show . -} MultiSet.toAscList . fst) convinceTransitions
-        hsetDrop = HashSet.fromList $ map ({- show . -} MultiSet.toAscList . fst) dropTransitions
+                                not $ HashSet.member (MultiSet.toAscList $ fst transition) hsetCert]
+        hsetConv = HashSet.fromList $ map (MultiSet.toAscList . fst) convinceTransitions
+        hsetDrop = HashSet.fromList $ map (MultiSet.toAscList . fst) dropTransitions
         noopTransitions = [transition |
                                 t <- transitionsForBuilding,
                                 let q = fst $ fst t,
@@ -135,9 +119,9 @@ distribute pc = PC.PP {
                                 i2 <- [0, 1],
                                 t2 <- [0, 1],
                                 let transition = (MultiSet.fromList [buildState' q i1 t1, buildState' p i2 t2], MultiSet.fromList [buildState' q' i1 t1, buildState' p' i2 t2]),
-                                not $ HashSet.member ({- show $ -} MultiSet.toAscList $ fst transition) hsetCert,
-                                not $ HashSet.member ({- show $ -} MultiSet.toAscList $ fst transition) hsetConv]
-        transitions = {-filterTransitions-} certifyTransitions ++ convinceTransitions ++ dropTransitions ++ filter (\x -> not $ HashSet.member ({- show $ -} MultiSet.toAscList $ fst x) hsetDrop) noopTransitions
+                                not $ HashSet.member (MultiSet.toAscList $ fst transition) hsetCert,
+                                not $ HashSet.member (MultiSet.toAscList $ fst transition) hsetConv]
+        transitions = certifyTransitions ++ convinceTransitions ++ dropTransitions ++ filter (\x -> not $ HashSet.member (MultiSet.toAscList $ fst x) hsetDrop) noopTransitions
         output = PC.Output {
             PC.true = [buildState' (show q) 1 token | q <- Set.toList (PC.states pc), token <- [0, 1]],
             PC.false = [buildState' (show q) 0 token | q <- Set.toList (PC.states pc), token <- [0, 1]]

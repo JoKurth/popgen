@@ -22,7 +22,7 @@ autarkify pc = PC.PCL {
         downState n = if n == 1 then hState 0 else "down_" ++ show n
         hStates = MultiSet.toList $ PC.helpers pc
         hState = (!!) hStates
-        qHelper = [upState i | i <- [0 .. numHelpers]] ++ [downState i | i <- [2 .. numHelpers]] -- i do not generate the state down_0 because it is not reachable -> deviation from the paper
+        qHelper = [upState i | i <- [0 .. numHelpers]] ++ [downState i | i <- [2 .. numHelpers]] -- we do not generate the state down_0 because it is not reachable -> deviation from the paper
         transitions = [(MultiSet.fromList [x, x], MultiSet.fromList [x', upState 1]) |
                             i <- [j | j <- [0 .. length initialInput - 1], even j],
                             let x = initialInput !! i, let x' = initialInput !! (i+1)] ++ -- double

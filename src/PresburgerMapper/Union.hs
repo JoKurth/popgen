@@ -107,8 +107,8 @@ combineSubPCs pred pcs = PC.PCB{
         predList = predicateToPredicateList pred
         inputVariables = Set.fromList $ map (\i -> "x_" ++ show i) [1 .. totalNumberOfVariables predList] -- the input variables
         renamedStates = Set.unions $ mapWithIndex renameStates pcs
-        joinedTransitions =   mapWithIndex (\i pc -> renameStatesInTransitions i $ PC.delta pc) pcs -- subcomputer
-                            ++ [calcDistributeTransitions inputVariables predList]                   -- distribute
+        joinedTransitions =   mapWithIndex (\i pc -> renameStatesInTransitions i $ PC.delta pc) pcs     -- subcomputer
+                            ++ [calcDistributeTransitions inputVariables predList]                      -- distribute
         coefficients = map extractCoefficientsFromPredicates predList
         numOfCoefficients = map (map length) coefficients
         numOfHelpers = MultiSet.map show $ MultiSet.insertMany 0 (max (maximum $ map maximum numOfCoefficients) 2 - 1) $ MultiSet.unions $ map PC.helpers pcs

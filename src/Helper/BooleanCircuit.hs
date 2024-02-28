@@ -13,7 +13,7 @@ import qualified Types.Predicates as Predicates (Predicate(..), BoolOp(..), NotO
 
 -- Helper
 
-data InternalGate = AND | OR | NOT   -- we model the NOT-gate as the result of the function not(x, y) = ¬x
+data InternalGate = AND | OR | NOT   -- we model the NOT-gate as the function not(x, y) = ¬x
     deriving (Show)
 data InternalConstGate = T | F | Any -- we use this as the second input of NOT-gates and map it later to `Input 0` because the input here does not matter for the NOT function
     deriving (Show)
@@ -124,8 +124,7 @@ deduplicate :: InternalBooleanCircuit -> PC.BooleanCircuit Int
 deduplicate circuit = snd $ deduplicateHelper circuit (HashMap.empty, ([], []))
 
 
--- we do not have to deduplicate anything here because each circuit has different input variables. thus two circuits cannot have the same gates and each circuit itself is already deduplicated
--- except all the Input 0 gates or do I? those gates aint real gates after all
+-- we do not have to deduplicate anything here because each circuit has different input variables. Thus two circuits cannot have the same gates and each circuit itself is already deduplicated
 buildUnionCircuitHelper :: Predicates.Predicate -> ([PC.BooleanCircuit String], PC.BooleanCircuit String) -> ([PC.BooleanCircuit String], PC.BooleanCircuit String)
 buildUnionCircuitHelper (Predicates.Leaf _) (circuit:xs, (gates, edges)) = (xs, (gates ++ fst circuit, edges ++ map renameEdges (snd circuit)))
     where

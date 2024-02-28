@@ -1,9 +1,6 @@
--- module InputOutput.MapInput (
---     stringToPredicate
--- ) where
-
-module InputOutput.MapInput
-where
+module InputOutput.MapInput (
+    stringToPredicate
+) where
 
 import Data.List.Split (splitOn)
 import Text.Regex.TDFA ( (=~) )

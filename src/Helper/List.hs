@@ -40,18 +40,3 @@ combineLists (x:y:xs) = combine (combine x y) $ combineLists xs
 
 extractIndexFromAllLists :: Int -> [[a]] -> [a]
 extractIndexFromAllLists index lists = map (!! index) $ filter (\list -> length list > index) lists
-
-
--- filterFromOtherList :: [(MultiSet String, MultiSet String)] -> [(MultiSet String, MultiSet String)] -> [(MultiSet String, MultiSet String)]
--- filterFromOtherList list filterList = filter (\x -> not $ HashSet.member (show $ fst x) hset) list
---     where
---         hset = HashSet.fromList $ map (show . fst) filterList
-
--- filterFromOtherLists :: (Show a) => [a] -> [[a]] -> [a]
--- filterFromOtherLists list filterLists = filter (\e -> not $ HashSet.member (show e) hset) list
---     where
---         buildHashSet [] = HashSet.empty
---         buildHashSet [l] = HashSet.fromList $ map show l
---         buildHashSet ([x]:ls) = HashSet.insert (show x) $ buildHashSet ls
---         buildHashSet ((x:xs):ls) = HashSet.insert (show x) $ buildHashSet (xs:ls)
---         hset = buildHashSet filterLists

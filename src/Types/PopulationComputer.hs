@@ -6,6 +6,10 @@ module Types.PopulationComputer (
     OutputLists(..),
     PopulationComputer(..),
     PopulationProtocol(..),
+    getQFromTransition,
+    getPFromTransition,
+    getQ'FromTransition,
+    getP'FromTransition,
     intGateToStringGate,
     stringGateToIntGate,
     isInputGate,
@@ -69,6 +73,17 @@ data PopulationProtocol a = PP {
     outputPP :: OutputLists a
 }
     deriving (Show)
+
+
+-- We define q as the minimal element in a configuration and p as the maximum element
+-- By doing so we can guarantee that q and p are always the same for a specific transition
+-- Since each transition only contains two distinct values we cover each value with selecting the minimum and maximum
+
+-- do not use these functions if multiple (more than two) agents in the same state can participate in a transaction
+getQFromTransition t = MultiSet.findMin $ fst t    -- todo auslagern
+getPFromTransition t = MultiSet.findMax $ fst t
+getQ'FromTransition t = MultiSet.findMin $ snd t    -- todo auslagern
+getP'FromTransition t = MultiSet.findMax $ snd t
 
 
 intGateToStringGate :: Gate Int -> Gate String

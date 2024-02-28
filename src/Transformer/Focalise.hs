@@ -2,7 +2,7 @@ module Transformer.Focalise (
     focalise
 ) where
 
-import qualified Types.PopulationComputer as PC (PopulationComputer(..), Gate(..), Edge, OutputLists(..), isInputGate, evalGate)
+import qualified Types.PopulationComputer as PC (PopulationComputer(..), Gate(..), Edge, OutputLists(..), isInputGate, evalGate, getQFromTransition, getPFromTransition, getQ'FromTransition, getP'FromTransition)
 
 import qualified Data.MultiSet as MultiSet
 import qualified Data.Set as Set
@@ -12,12 +12,6 @@ import Data.List (sortBy)
 flags = ["-", "+"]
 indicators = ["0", "1", "!"]
 boolVals = ["0", "1", "undef"]
-
-
-getQFromTransition t = MultiSet.findMin $ fst t    -- todo auslagern
-getPFromTransition t = MultiSet.findMax $ fst t
-getQ'FromTransition t = MultiSet.findMin $ snd t    -- todo auslagern
-getP'FromTransition t = MultiSet.findMax $ snd t
 
 
 gateToGateStateName g e = "g(" ++ show g ++ "," ++ show e ++ ")"
@@ -80,10 +74,10 @@ focalise pc = PC.PCL {
         states = qOrig ++ qSupp ++ qGate ++ qReset
         executeTransitions = [(MultiSet.fromList [buildOrigState q flag1, buildOrigState p flag2], MultiSet.fromList [buildOrigState q' "+", buildOrigState p' "-"]) |
                                     t <- Set.toList (PC.delta pc),
-                                    let q = getQFromTransition t,
-                                    let p = getPFromTransition t,
-                                    let q' = getQ'FromTransition t,
-                                    let p' = getP'FromTransition t,
+                                    let q = PC.getQFromTransition t,
+                                    let p = PC.getPFromTransition t,
+                                    let q' = PC.getQ'FromTransition t,
+                                    let p' = PC.getP'FromTransition t,
                                     flag1 <- flags,
                                     flag2 <- flags]                        -- execute
         denotifyTransitions = [(MultiSet.fromList [buildOrigState q "+", buildOrigState p "+"], MultiSet.fromList [buildOrigState q "+", buildOrigState p "-"]) |

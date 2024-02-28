@@ -6,7 +6,7 @@ module Transformer.Distribute (
 ) where
 
 import Helper.List
-import qualified Types.PopulationComputer as PC (PopulationComputer(..), PopulationProtocol(..), OutputLists (..))
+import qualified Types.PopulationComputer as PC (PopulationComputer(..), PopulationProtocol(..), OutputLists (..), getQ'FromTransition, getP'FromTransition)
 
 import Data.List (sort)
 import qualified Data.MultiSet as MultiSet
@@ -14,11 +14,6 @@ import qualified Data.Set as Set
 import qualified Data.HashSet as HashSet
 import qualified Data.HashMap.Strict as HashMap
 
-
-getQFromTransition t = MultiSet.findMin $ fst t    -- todo auslagern
-getPFromTransition t = MultiSet.findMax $ fst t
-getQ'FromTransition t = MultiSet.findMin $ snd t    -- todo auslagern
-getP'FromTransition t = MultiSet.findMax $ snd t
 
 buildState q i t = "(" ++ q ++ "," ++ show i ++ "," ++ show t ++ ")"
 
@@ -35,7 +30,7 @@ buildTransitionsForBuilding oldStates oldTransitions = [((q, p), (q', p')) |
         hmap = HashMap.fromList $ map (\t -> (show $ fst t, t)) oldTransitions
         getTransitionWithQAndP :: String -> String -> (String, String)
         getTransitionWithQAndP q p = case HashMap.lookup (show $ MultiSet.fromList [q, p]) hmap of
-                                        Just t -> (getQ'FromTransition t, getP'FromTransition t)
+                                        Just t -> (PC.getQ'FromTransition t, PC.getP'FromTransition t)
                                         Nothing -> (q, p)
 
 

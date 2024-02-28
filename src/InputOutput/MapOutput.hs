@@ -13,12 +13,6 @@ import qualified Data.HashMap.Lazy as HashMap
 import Data.List (foldl1')
 import Data.Maybe (isJust, isNothing)
 
--- do not use these functions if multiple (more than two) agents in the same state can participate in a transaction
-getQFromTransition t = MultiSet.findMin $ fst t    -- todo auslagern
-getPFromTransition t = MultiSet.findMax $ fst t
-getQ'FromTransition t = MultiSet.findMin $ snd t    -- todo auslagern
-getP'FromTransition t = MultiSet.findMax $ snd t
-
 
 stringPcToIntPc :: PC.PopulationComputer String -> PC.PopulationComputer Int
 stringPcToIntPc (PC.PCB states delta input output helper) = PC.PCB {
@@ -35,10 +29,10 @@ stringPcToIntPc (PC.PCB states delta input output helper) = PC.PCB {
             where
                 mapTransition t = (MultiSet.fromList [q, p], MultiSet.fromList [q', p'])
                     where
-                        q = (stateMapper HashMap.!) $ getQFromTransition t
-                        p = (stateMapper HashMap.!) $ getPFromTransition t
-                        q' = (stateMapper HashMap.!) $ getQ'FromTransition t
-                        p' = (stateMapper HashMap.!) $ getP'FromTransition t
+                        q = (stateMapper HashMap.!) $ PC.getQFromTransition t
+                        p = (stateMapper HashMap.!) $ PC.getPFromTransition t
+                        q' = (stateMapper HashMap.!) $ PC.getQ'FromTransition t
+                        p' = (stateMapper HashMap.!) $ PC.getP'FromTransition t
         mapOutput :: PC.BooleanCircuit String -> PC.BooleanCircuit Int
         mapOutput ([], edges) = ([], edges)
         mapOutput ((PC.Input x):gates, edges) = (PC.Input (stateMapper HashMap.! x) : fst nextCircuit, snd nextCircuit)
@@ -61,10 +55,10 @@ stringPcToIntPc (PC.PCL states delta input output helper) = PC.PCL {
             where
                 mapTransition t = (MultiSet.fromList [q, p], MultiSet.fromList [q', p'])
                     where
-                        q = (stateMapper HashMap.!) $ getQFromTransition t
-                        p = (stateMapper HashMap.!) $ getPFromTransition t
-                        q' = (stateMapper HashMap.!) $ getQ'FromTransition t
-                        p' = (stateMapper HashMap.!) $ getP'FromTransition t
+                        q = (stateMapper HashMap.!) $ PC.getQFromTransition t
+                        p = (stateMapper HashMap.!) $ PC.getPFromTransition t
+                        q' = (stateMapper HashMap.!) $ PC.getQ'FromTransition t
+                        p' = (stateMapper HashMap.!) $ PC.getP'FromTransition t
         mapOutput :: PC.OutputLists String -> PC.OutputLists Int
         mapOutput (PC.Output true false) = PC.Output {
             PC.true = map (stateMapper HashMap.!) true,
@@ -105,10 +99,10 @@ populationComputerToPopSimBc pc vars = (show (length states) ++ " " ++ show (len
             where
                 mapTransition t = show q ++ ":" ++ show p ++ " " ++ show q' ++ ":" ++ show p'
                     where
-                        q = (stateMapper HashMap.!) $ getQFromTransition t
-                        p = (stateMapper HashMap.!) $ getPFromTransition t
-                        q' = (stateMapper HashMap.!) $ getQ'FromTransition t
-                        p' = (stateMapper HashMap.!) $ getP'FromTransition t
+                        q = (stateMapper HashMap.!) $ PC.getQFromTransition t
+                        p = (stateMapper HashMap.!) $ PC.getPFromTransition t
+                        q' = (stateMapper HashMap.!) $ PC.getQ'FromTransition t
+                        p' = (stateMapper HashMap.!) $ PC.getP'FromTransition t
         mapOutput output = (mapGates $ fst output, snd output)
             where
                 mapGate (PC.Input x) = PC.Input $ stateMapper HashMap.! x
@@ -141,10 +135,10 @@ populationComputerToPopSim pc vars = (show (length states) ++ " " ++ show (lengt
             where
                 mapTransition t = show q ++ ":" ++ show p ++ " " ++ show q' ++ ":" ++ show p'
                     where
-                        q = (stateMapper HashMap.!) $ getQFromTransition t
-                        p = (stateMapper HashMap.!) $ getPFromTransition t
-                        q' = (stateMapper HashMap.!) $ getQ'FromTransition t
-                        p' = (stateMapper HashMap.!) $ getP'FromTransition t
+                        q = (stateMapper HashMap.!) $ PC.getQFromTransition t
+                        p = (stateMapper HashMap.!) $ PC.getPFromTransition t
+                        q' = (stateMapper HashMap.!) $ PC.getQ'FromTransition t
+                        p' = (stateMapper HashMap.!) $ PC.getP'FromTransition t
         mapOutput (PC.PCL {PC.outputOL = (PC.Output true false)}) = PC.Output {
                                                                         PC.true = map (stateMapper HashMap.!) true,
                                                                         PC.false = map (stateMapper HashMap.!) false
@@ -172,10 +166,10 @@ populationProtocolToPopSim pp vars = (show (length states) ++ " " ++ show (lengt
             where
                 mapTransition t = show q ++ ":" ++ show p ++ " " ++ show q' ++ ":" ++ show p'
                     where
-                        q = (stateMapper HashMap.!) $ getQFromTransition t
-                        p = (stateMapper HashMap.!) $ getPFromTransition t
-                        q' = (stateMapper HashMap.!) $ getQ'FromTransition t
-                        p' = (stateMapper HashMap.!) $ getP'FromTransition t
+                        q = (stateMapper HashMap.!) $ PC.getQFromTransition t
+                        p = (stateMapper HashMap.!) $ PC.getPFromTransition t
+                        q' = (stateMapper HashMap.!) $ PC.getQ'FromTransition t
+                        p' = (stateMapper HashMap.!) $ PC.getP'FromTransition t
         mappedOutput = mapOutput output
         mapOutput :: PC.OutputLists Int -> PC.OutputLists Int
         mapOutput (PC.Output true false) = PC.Output {

@@ -6,18 +6,10 @@ module Transformer.Binarise (
 ) where
 
 import Helper.List
-import qualified Types.PopulationComputer as PC (PopulationComputer(..), Gate(..), BooleanCircuit)
+import qualified Types.PopulationComputer as PC (PopulationComputer(..), Gate(..), BooleanCircuit, getQFromTransition, getPFromTransition)
 
 import qualified Data.MultiSet as MultiSet
 import qualified Data.Set as Set
-
-
--- We define q as the minimal element in a configuration and p as the maximum element
--- By doing so we can guarantee that q and p are always the same for a specific transition
--- Since each transition only contains two distinct values we cover each value with selecting the minimum and maximum
-
-getQFromTransition t = MultiSet.findMin $ fst t
-getPFromTransition t = MultiSet.findMax $ fst t
 
 
 renameTransitionsForStates :: (MultiSet.MultiSet String, MultiSet.MultiSet String) -> [Char]
@@ -28,7 +20,7 @@ buildStateName q number = "(" ++ q ++ "," ++ show number ++ ")"
 
 data StateType = Q | P
     deriving Eq
-buildTStates state number transition = "(" ++ (if state == Q then getQFromTransition else getPFromTransition) transition ++ "," ++ show number ++ "," ++ renameTransitionsForStates transition ++ ")"
+buildTStates state number transition = "(" ++ (if state == Q then PC.getQFromTransition else PC.getPFromTransition) transition ++ "," ++ show number ++ "," ++ renameTransitionsForStates transition ++ ")"
 
 buildIdentifiedTStates :: (MultiSet.MultiSet String, MultiSet.MultiSet String) -> Int -> [Char]
 buildIdentifiedTStates transition i
@@ -71,7 +63,7 @@ binarise pc = PC.PCB {
         states = [buildStateName q i | q <- oldStates,
                                        i <- [0 .. multiplicity q]] ++                       -- stack
                  [buildTStates Q i t | t <- oldTransitions,
-                                     let q = getQFromTransition t,
+                                     let q = PC.getQFromTransition t,
                                      i <- [0 .. multiplicity q]] ++                         -- commit
                  [buildIdentifiedTStates t i | t <- oldTransitions,
                                                i <- [1 .. MultiSet.size (fst t)]]           -- execute
@@ -87,8 +79,8 @@ binarise pc = PC.PCB {
                                 i + j >= multiplicity q]                                    -- stack
         commitTransitions = [(MultiSet.fromList [buildStateName q i, buildStateName p j], MultiSet.fromList [buildTStates Q (i - numOfQ) t, buildStateName p (j - numOfP)]) |
                                 t <- oldTransitions,
-                                let q = getQFromTransition t,
-                                let p = getPFromTransition t,
+                                let q = PC.getQFromTransition t,
+                                let p = PC.getPFromTransition t,
                                 q /= p,
                                 let numOfQ = MultiSet.occur q (fst t),
                                 let numOfP = MultiSet.occur p (fst t),
@@ -98,8 +90,8 @@ binarise pc = PC.PCB {
                                 j >= numOfP] ++                                             -- commit
                             [(MultiSet.fromList [buildStateName q i, buildStateName q j], MultiSet.fromList [buildTStates Q (i + j - numOfQ) t, buildStateName q 0]) |
                                 t <- oldTransitions,
-                                let q = getQFromTransition t,
-                                let p = getPFromTransition t,
+                                let q = PC.getQFromTransition t,
+                                let p = PC.getPFromTransition t,
                                 q == p,
                                 let numOfQ = MultiSet.occur q (fst t),
                                 i <- [0 .. multiplicity q],
@@ -108,8 +100,8 @@ binarise pc = PC.PCB {
                                 i + j - numOfQ <= multiplicity q] ++                        -- commit
                             [(MultiSet.fromList [buildStateName q i, buildStateName q j], MultiSet.fromList [buildTStates Q (i + j - numOfQ - multiplicity q) t, buildStateName q (multiplicity q)]) |
                                 t <- oldTransitions,
-                                let q = getQFromTransition t,
-                                let p = getPFromTransition t,
+                                let q = PC.getQFromTransition t,
+                                let p = PC.getPFromTransition t,
                                 q == p,
                                 let numOfQ = MultiSet.occur q (fst t),
                                 i <- [0 .. multiplicity q],
@@ -118,19 +110,19 @@ binarise pc = PC.PCB {
                                 i + j - numOfQ > multiplicity q]                            -- commit
         transferTransitions = [(MultiSet.fromList [buildTStates Q i t, buildStateName q 0], MultiSet.fromList [buildTStates Q 0 t, buildStateName q i]) |
                                 t <- oldTransitions,
-                                let q = getQFromTransition t,
+                                let q = PC.getQFromTransition t,
                                 i <- [1 .. multiplicity q]]                                 -- transfer
         executeTransitions = [(MultiSet.fromList [buildIdentifiedTStates t i, buildStateName p 0], MultiSet.fromList [buildIdentifiedTStates t (i+1), buildSIdentifiedState (s !! (i - 1))]) |
                                 t <- oldTransitions,
-                                let q = getQFromTransition t,
-                                let p = getPFromTransition t,
+                                let q = PC.getQFromTransition t,
+                                let p = PC.getPFromTransition t,
                                 let s = MultiSet.toList (snd t),
                                 i <- [1 .. length s - 1],
                                 i <= MultiSet.occur p (fst t)] ++
                              [(MultiSet.fromList [buildIdentifiedTStates t i, buildStateName q 0], MultiSet.fromList [buildIdentifiedTStates t (i+1), buildSIdentifiedState (s !! (i - 1))]) |
                                 t <- oldTransitions,
-                                let q = getQFromTransition t,
-                                let p = getPFromTransition t,
+                                let q = PC.getQFromTransition t,
+                                let p = PC.getPFromTransition t,
                                 let s = MultiSet.toList (snd t),
                                 i <- [1 .. length s - 1],
                                 i > MultiSet.occur p (fst t)]                               -- execute

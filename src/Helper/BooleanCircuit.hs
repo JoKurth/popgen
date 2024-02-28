@@ -134,7 +134,7 @@ buildUnionCircuitHelper (Predicates.Leaf _) (circuit:xs, (gates, edges)) = (xs, 
 buildUnionCircuitHelper (Predicates.NodeN _ pred) (circuits, (gates, edges)) = (fst newCircuit, (fst (snd newCircuit) ++ [PC.Input "0", PC.NOT], snd (snd newCircuit) ++ [edge]))
     where
         newCircuit = buildUnionCircuitHelper pred (circuits, (gates, edges))
-        edge = (length (fst $ snd newCircuit), (length (fst $ snd newCircuit), length (fst $ snd newCircuit) + 1))
+        edge = (length (fst $ snd newCircuit) + 1, (length (fst $ snd newCircuit) - 1, length (fst $ snd newCircuit)))
 buildUnionCircuitHelper (Predicates.NodeP lPred op rPred) (circuits, (gates, edges)) = (fst rightCircuit, (newGates ++ [gate], newEdges ++ [(length newGates, (leftGate, rightGate))]))
     where
         leftCircuit = buildUnionCircuitHelper lPred (circuits, (gates, edges))

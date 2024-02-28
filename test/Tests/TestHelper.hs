@@ -9,14 +9,12 @@ import qualified Types.PopulationComputer as PC
 import Helper.List
 
 import Data.List (sortBy, sort, find)
-import Test.HUnit
 import System.IO
 import System.Process
 import Helper.Tuple
 import Data.Maybe (fromJust)
 import qualified Data.HashMap.Lazy as HashMap
-import Control.Monad (when)
-import Debug.Trace
+
 
 runProtocol :: String -> IO String
 runProtocol filePath = do

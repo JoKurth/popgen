@@ -1,5 +1,5 @@
 cabal-version:      2.4
-name:               FaSPPfPA
+name:               popgen
 version:            0.1.0.0
 
 -- A short (one-line) description of the package.
@@ -17,7 +17,7 @@ author:             JoKurth
 maintainer:         71062996+JoKurth@users.noreply.github.com
 
 
-executable FaSPPfPA
+executable popgen
     main-is:          Main.hs
 
     -- Modules included in this executable, other than Main.

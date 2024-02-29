@@ -108,8 +108,6 @@ main = do
     putStrLn "  Focalise..."
     when (perfAnalysis == "y") (putStrLn $ "    number of states: " ++ show (length $ PC.states focalisedPC))
     when (perfAnalysis == "y") (putStrLn $ "    number of transitions: " ++ show (length $ PC.delta focalisedPC))
-    print $ length $ PC.helpers focalisedPC
-    print $ length $ PC.helpers $ focalise $ binarise $ preprocess initPC
 
     putStrLn ""
     let autarkifiedPC = autarkify focalisedPC

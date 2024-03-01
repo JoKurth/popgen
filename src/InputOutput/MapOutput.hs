@@ -14,6 +14,7 @@ import Data.List (foldl1')
 import Data.Maybe (isJust, isNothing)
 
 
+-- | Converts a population computer that works over Strings into one over Ints.
 stringPcToIntPc :: PC.PopulationComputer String -> PC.PopulationComputer Int
 stringPcToIntPc (PC.PCB states delta input output helper) = PC.PCB {
     PC.states  = Set.fromList [1 .. Set.size states],
@@ -66,9 +67,11 @@ stringPcToIntPc (PC.PCL states delta input output helper) = PC.PCL {
         }
 
 
+-- | Returns an overview of the size of the given population computer.
 popCompOverview :: PC.PopulationComputer a -> String
-popCompOverview pc = "PComputer:\n" ++
-                     show (length states) ++ " " ++ show (length input) ++ " " ++ show (length transitions) ++ " " ++ show (length helper)
+popCompOverview pc = "PComputer:\nNum of states: " ++
+                     show (length states) ++ "; Num of inputs: " ++ show (length input) ++
+                        "; Num of transitions: " ++ show (length transitions) ++ "; Num of helper: " ++ show (length helper)
     where
         states = PC.states pc
         transitions = PC.delta pc
@@ -76,6 +79,9 @@ popCompOverview pc = "PComputer:\n" ++
         helper = PC.helpers pc
 
 
+-- | Returns a String in the popsim format of the given population computer with a Boolean circuit as output function;
+--           an updated version of the Boolean circuit;
+--           a HashMap mapping from the String names to the new Int names of the states.
 populationComputerToPopSimBc :: PC.PopulationComputer String -> Maybe [Int] -> (String, PC.BooleanCircuit Int, HashMap.HashMap String Int)
 populationComputerToPopSimBc pc vars = (show (length states) ++ " " ++ show (length input + MultiSet.distinctSize helper) ++ " " ++ show (length transitions) ++ "\n" ++
                                  foldl1 (\str x -> str ++ " " ++ x) (map (\(x, val) -> show x ++ val) mappedInputs) ++ (if MultiSet.distinctSize helper > 0 then foldl (\str (x, n) -> str ++ " " ++ show x ++ ":" ++ show n) "" mappedHelper else "") ++ "\n" ++
@@ -112,6 +118,9 @@ populationComputerToPopSimBc pc vars = (show (length states) ++ " " ++ show (len
                 mapGates (g:gates) = mapGate g : mapGates gates
 
 
+-- | Returns a String in the popsim format of the given population computer with an OutputList as output function;
+--           an updated version of the OutputList;
+--           a HashMap mapping from the String names to the new Int names of the state.
 populationComputerToPopSim :: PC.PopulationComputer String -> Maybe [Int] -> (String, PC.OutputLists Int, HashMap.HashMap String Int)
 populationComputerToPopSim pc vars = (show (length states) ++ " " ++ show (length input + MultiSet.distinctSize helper) ++ " " ++ show (length transitions) ++ "\n" ++
                                  foldl1 (\str x -> str ++ " " ++ x) (map (\(x, val) -> (show x) ++ val) mappedInputs) ++ (if MultiSet.distinctSize helper > 0 then foldl (\str (x, n) -> str ++ " " ++ show x ++ ":" ++ show n) "" mappedHelper else "") ++ "\n" ++
@@ -145,6 +154,8 @@ populationComputerToPopSim pc vars = (show (length states) ++ " " ++ show (lengt
                                                                     }
 
 
+-- | Returns a String in the popsim format of the given population protocol;
+--           an updated version of the OutputList
 populationProtocolToPopSim :: PC.PopulationProtocol Int -> Maybe [Int] -> (String, PC.OutputLists Int)
 populationProtocolToPopSim pp vars = (show (length states) ++ " " ++ show (length input) ++ " " ++ show (length transitions) ++ "\n" ++
                                      foldl1 (\str x -> str ++ " " ++ x) (map (\(x, val) -> (show x) ++ val) mappedInputs) ++ "\n" ++

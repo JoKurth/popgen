@@ -36,6 +36,7 @@ mapPredicate predicateString
             remainderRegEx = "^\\[\\-?[0-9]+(,\\-?[0-9]+)*\\];[1-9]+;[0-9]+$"
             thresholdRegEx = "^\\[\\-?[0-9]+(,\\-?[0-9]+)*\\];\\-?[0-9]+$"
 
+
 boolExprToPredicate :: BoolExpr String -> Predicates.Predicate
 boolExprToPredicate (BOr leftExpr rightExpr) = Predicates.NodeP (boolExprToPredicate leftExpr) Predicates.OR (boolExprToPredicate rightExpr)
 boolExprToPredicate (BAnd leftExpr rightExpr) = Predicates.NodeP (boolExprToPredicate leftExpr) Predicates.AND (boolExprToPredicate rightExpr)
@@ -48,6 +49,7 @@ resultFromParserOrThrow (Left _) = error "Could not parse the given predicate. P
 resultFromParserOrThrow (Right expr) = expr
 
 
+-- | Maps an input string to a predicate. Throws an error if the string does not match the specified format.
 stringToPredicate :: String -> Predicates.Predicate
 stringToPredicate "" = error "Cannot create predicate from empty string."
 stringToPredicate input = boolExprToPredicate $ resultFromParserOrThrow $ runParser (parseBoolExpr identifier) () "" input

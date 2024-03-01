@@ -16,6 +16,7 @@ import Data.Maybe (fromJust)
 import qualified Data.HashMap.Lazy as HashMap
 
 
+
 runProtocol :: String -> IO String
 runProtocol filePath = do
     (Just hin, Just hout, _, ph) <- createProcess (shell "/home/johannes/OneDrive/Uni/Bachelor-Arbeit/popsim-main/popsimio array 100000000") { std_in = CreatePipe, std_out = CreatePipe }
@@ -116,6 +117,7 @@ evalPopsimOutputPcBc definition output numAgents expectedOutput protDesc stateMa
         then trace (printPopsimConfiguration popsimOutput stateMapper finalNumAgents protDesc) False
         else -}
     outputConsens == expectedOutput
+
 
 
 genericPpTest :: (String -> PC.PopulationProtocol Int) -> String -> [Int] -> Bool -> Bool -> IO (String, Bool)

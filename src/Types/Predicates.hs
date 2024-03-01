@@ -9,10 +9,10 @@ module Types.Predicates (
 
 
 type Sum = [[Int]]
---                          coefficients m c
+-- |                        coefficients m c
 data RemainderPredicate = RP Sum Int Int
     deriving (Show)
---                          coefficients c
+-- |                        coefficients c
 data ThresholdPredicate = TP Sum Int
     deriving (Show)
 type BasePredicate = Either RemainderPredicate ThresholdPredicate

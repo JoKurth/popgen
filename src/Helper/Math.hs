@@ -5,6 +5,8 @@ import Data.Set as Set
 import Data.MultiSet as MultiSet
 
 
+-- | Returns the support of a given multiset.
+--   This function is a alias for the MultiSet.toSet function
 multiSetSupport :: Num a => Ord a => MultiSet.MultiSet a -> Set.Set a
 multiSetSupport = MultiSet.toSet
 
@@ -20,6 +22,7 @@ intToBinary x = i : intToBinary (x - 2^i)
         i = floor $ logBase 2 $ fromIntegral x
 
 
+-- | Returns the ceiled value of the binary logarithm
 ceilBinLog :: Int -> Int
 ceilBinLog = ceiling . logBase 2 . fromIntegral
 

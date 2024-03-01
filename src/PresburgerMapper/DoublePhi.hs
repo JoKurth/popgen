@@ -14,6 +14,8 @@ doubleBasePredicate :: Predicates.BasePredicate -> Predicates.BasePredicate
 doubleBasePredicate (Left (Predicates.RP sum m c)) = Left (Predicates.RP (double sum) m c)
 doubleBasePredicate (Right (Predicates.TP sum m)) = Right (Predicates.TP (double sum) m)
 
+
+-- | Doubles a given predicate accorcing to the definition of Czerner et. al
 doublePredicate :: Predicates.Predicate -> Predicates.Predicate
 doublePredicate (Predicates.NodeP lPred operator rPred) = Predicates.NodeP (doublePredicate lPred) operator (doublePredicate rPred)
 doublePredicate (Predicates.NodeN operator pred) = Predicates.NodeN operator (doublePredicate pred)

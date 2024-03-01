@@ -33,7 +33,7 @@ instance (Show a) => Show (Gate a) where
     show ConstF = "Const_False"
     show (Input a) = "Input_" ++ show a
 
--------------(index of the gate that has these inputs, (in1, in2))
+-- | -------(index of the gate that has these inputs, (in1, in2))
 type Edge = (Int, (Int, Int))
 
 type BooleanCircuit a = ([Gate a], [Edge])
@@ -80,12 +80,14 @@ data PopulationProtocol a = PP {
 -- Since each transition only contains two distinct values we cover each value with selecting the minimum and maximum
 
 -- do not use these functions if multiple (more than two) agents in the same state can participate in a transaction
-getQFromTransition t = MultiSet.findMin $ fst t    -- todo auslagern
+getQFromTransition t = MultiSet.findMin $ fst t
 getPFromTransition t = MultiSet.findMax $ fst t
-getQ'FromTransition t = MultiSet.findMin $ snd t    -- todo auslagern
+getQ'FromTransition t = MultiSet.findMin $ snd t
 getP'FromTransition t = MultiSet.findMax $ snd t
 
 
+-- | Transfers a given Gate over Ints into a Gate over Strings.
+--   This leaves ever Gate untouched except Input-Gates which from now on listen to the showed value.
 intGateToStringGate :: Gate Int -> Gate String
 intGateToStringGate AND = AND
 intGateToStringGate OR = OR
@@ -94,6 +96,9 @@ intGateToStringGate ConstT = ConstT
 intGateToStringGate ConstF = ConstF
 intGateToStringGate (Input g) = Input $ show g
 
+-- | Transfers a given Gate over Strings into a Gate over Ints.
+--   This leaves ever Gate untouched except Input-Gates which from now on listen to the read value.
+--   It throws an error if Input-Gates do not listen to numbers encoded as strings.
 stringGateToIntGate :: Gate String -> Gate Int
 stringGateToIntGate AND = AND
 stringGateToIntGate OR = OR
@@ -103,6 +108,8 @@ stringGateToIntGate ConstF = ConstF
 stringGateToIntGate (Input g) = Input $ read g
 
 
+-- | Returns wheter a given Gate is an Input-Gate.
+--   We consider Cont-Gates as input gates.
 isInputGate :: Gate a -> Bool
 isInputGate (Input _) = True
 isInputGate ConstT = True           -- const gates are considered input gates
@@ -110,7 +117,9 @@ isInputGate ConstF = True           -- const gates are considered input gates
 isInputGate _ = False
 
 
--- | each Int encodes a boolean value, i.e. 0 encodes False, 1 encodes True all other values are undefined and lead to undefined behavior
+-- | Evaluates a given Gate according to the given two inputs.
+--   Each Int encodes a boolean value, i.e. 0 encodes False, 1 encodes True all other values are undefined and lead to undefined behavior.
+--   Input _ -Gates are evaluated as false.
 evalGate :: Gate a -> Int -> Int -> Int
 evalGate AND 1 1 = 1
 evalGate AND _ _ = 0

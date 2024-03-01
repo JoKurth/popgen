@@ -9,6 +9,7 @@ import Data.MultiSet as MultiSet
 import Debug.Trace
 
 
+-- | Traces the given transitions in a format compatible to GrapViz dot
 transitionsToDot :: Show a => Set.Set (MultiSet.MultiSet a, MultiSet.MultiSet a) -> Set.Set (MultiSet.MultiSet a, MultiSet.MultiSet a)
 transitionsToDot transitions = trace (mapTransitionsToDotFormat transitions) transitions
     where
@@ -18,6 +19,7 @@ transitionsToDot transitions = trace (mapTransitionsToDotFormat transitions) tra
                                                     "digraph Transitions\n{\n" ++ transitionsToDot (Set.toList transitions) ++ "}" ++
                                                     "\n------------------------------------------\n"
 
+-- | Traces the given transitions in a format compatible to GrapViz dot
 transitionsToDotList :: Show a => [(MultiSet.MultiSet a, MultiSet.MultiSet a)] -> [(MultiSet.MultiSet a, MultiSet.MultiSet a)]
 transitionsToDotList transitions = trace (mapTransitionsToDotFormat transitions) transitions
     where
@@ -28,6 +30,7 @@ transitionsToDotList transitions = trace (mapTransitionsToDotFormat transitions)
                                                     "\n------------------------------------------\n"
 
 
+-- | Traces the given Boolean circuit in a format compatible to GrapViz dot
 booleanCircuitToDot :: Show a => PC.BooleanCircuit a -> PC.BooleanCircuit a
 booleanCircuitToDot bc = trace (mapBcToDotFormat bc) bc
     where
@@ -43,4 +46,5 @@ booleanCircuitToDot bc = trace (mapBcToDotFormat bc) bc
                                     "\n------------------------------------------\n"
 
 
+-- | Traces the length of the given list
 traceLength desc list = trace (desc ++ " " ++ show (length list)) list

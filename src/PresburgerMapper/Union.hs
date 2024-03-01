@@ -18,7 +18,7 @@ import qualified Data.Bifunctor
 
 -- Helper
 
--- | The name of this function follows the naming in the paper
+-- | The name and functionality of this function follows the naming in the paper by Czerner et. al.
 bin :: Int -> MultiSet.MultiSet Int
 bin x = MultiSet.fromList [signum x * 2^i | i <- intToBinary $ abs x]
 
@@ -120,5 +120,6 @@ combineSubPCs pred pcs = PC.PCB{
                 renameGates i = Data.Bifunctor.first (map (renameGate i))
 
 -- Export
+-- | Constructs a population computer for a given Presburger predicate.
 constructPC :: Predicates.Predicate -> PC.PopulationComputer String
 constructPC pred = combineSubPCs pred $ constructSubPCs pred

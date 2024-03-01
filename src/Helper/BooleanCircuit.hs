@@ -27,7 +27,8 @@ getDescFromInternalCircuit (Leaf s) = show s
 getDescFromInternalCircuit (Const b) = show b
 getDescFromInternalCircuit (Node _ (_, _, desc) _) = desc
 
-
+-- | Returns the binary representation of a given Int.
+--   E.g., 6 -> [1,1,0]
 intToBinary :: Int -> [Int]
 intToBinary 0 = [0]
 intToBinary n = intToBinary (n `div` 2) ++ [n `mod` 2]
@@ -149,12 +150,15 @@ buildUnionCircuitHelper (Predicates.NodeP lPred op rPred) (circuits, (gates, edg
 
 -- Export
 
+-- | Builds a Boolean circuit for the predicate 2^d >= c
 buildThresholdCircuit :: Int -> Int -> PC.BooleanCircuit Int
 buildThresholdCircuit c d = deduplicate $ buildInternalThresholdCircuit c d
 
+-- | Builds a Boolean circuit for the predicate 2^d \equiv_m c
 buildRemainderCircuit :: Int -> Int -> Int -> PC.BooleanCircuit Int
 buildRemainderCircuit m c d = deduplicate $ buildInternalRemainderCircuit m c d
 
--- | The states within each circuit must already been renamed
+-- | Builds a Boolean circuit for the given Presburger Predicate
+--   Note: The states within each circuit must already been renamed.
 buildUnionCircuit :: Predicates.Predicate -> [PC.BooleanCircuit String] -> PC.BooleanCircuit String
 buildUnionCircuit pred circuits = snd $ buildUnionCircuitHelper pred (circuits, ([], []))

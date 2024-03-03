@@ -34,7 +34,7 @@ The project is build using `cabal`. Thus, all cabal commands can be used. The mo
     ```
 
 4. Testing \
-    *Be aware that running all provided tests requires a lot of time and memory.*
+    *Be aware that running all provided tests requires a lot of time (>> 6h) and memory (>> 128 GB).*
     ```
     cabal test test:tests --ghc-options="-main-is Tests.Tests" --test-show-details="always"
     ```

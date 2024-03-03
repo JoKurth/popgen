@@ -18,7 +18,7 @@ import qualified Data.Bifunctor
 
 -- Helper
 
--- | The name and functionality of this function follows the naming in the paper by Czerner et. al.
+-- | The name and functionality of this function follows the naming in the paper by Czerner et al.
 bin :: Int -> MultiSet.MultiSet Int
 bin x = MultiSet.fromList [signum x * 2^i | i <- intToBinary $ abs x]
 

@@ -15,7 +15,7 @@ import qualified Data.MultiSet as MultiSet
 -- Export
 
 -- | Constructs a population computer for a given remainder predicate.
---   We apply the same restrictions to the inputs as done by Czerner et. al.
+--   We apply the same restrictions to the inputs as done by Czerner et al.
 constructRemainderPC :: Predicates.RemainderPredicate -> PC.PopulationComputer Int
 constructRemainderPC (Predicates.RP coefficients m c) = PC.PCB {
     PC.states = Set.fromList stateList,

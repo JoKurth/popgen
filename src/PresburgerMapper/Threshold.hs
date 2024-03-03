@@ -15,7 +15,7 @@ import qualified Data.MultiSet as MultiSet
 -- Export
 
 -- | Constructs a population computer for a given threshold predicate.
---   We apply the same restrictions to the inputs as done by Czerner et. al.
+--   We apply the same restrictions to the inputs as done by Czerner et al.
 constructThresholdPC :: Predicates.ThresholdPredicate -> Int -> PC.PopulationComputer Int
 constructThresholdPC (Predicates.TP coefficients c) s = PC.PCB {         -- s has the same meaning as in the paper (page 18)
     PC.states = Set.fromList stateList,

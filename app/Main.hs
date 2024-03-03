@@ -23,6 +23,7 @@ import Control.Monad (when)
 import Helper.Tuple (fst3, omitLast)
 import System.IO (openFile, IOMode (WriteMode), hClose, hPutStr, hPutStrLn, hPrint)
 
+
 main :: IO ()
 main = do
     -- user input

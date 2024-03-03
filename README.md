@@ -7,6 +7,8 @@ A tool to create `Fast and Succinct Population Protocols for Presburger Arithmet
 
 The tool takes a Presburger predicate as a String as its input and constructs a population protocol that computes exactly that predicate. The resulting predicate is printed to a given file in a format compatible to [popsim](https://github.com/Rage1851/popsim) such that it can be simulated by the same.
 
+The underlying theoretical work by Czerner et al. can be found on [arXiv](https://arxiv.org/abs/2202.11601) and [ScienceDirect](https://www.sciencedirect.com/science/article/abs/pii/S0022000023000867).
+
 
 ## System requirements
 
